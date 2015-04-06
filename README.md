@@ -4,9 +4,9 @@ Just as a forester uses many tools to manage a forest, we may need multiple tool
 
 (To be) included splitting criteria within `forestr`:
 - Gini
-- Impurity
-- One-Sided Extremes
-- One-Sided Impurity
+- Entropy
+- One-Sided extreme
+- One-Sided purity
 
 # Plan of Action
 
@@ -20,6 +20,6 @@ Currently I have read through the code files in the `randomForest` package and l
 
 ## Testing
 
-The one-sided extremes and one-sided impurity methods will be the focus of testing the package for my paper. These methods were created to better handle unbalanced (2-class) classification tasks where one class is of more importance to be classified correctly (think cancer detection). As such, we will test these splitting criteria with varying levels of unbalanced data in a 2-class classification problem. 
+The one-sided extreme and one-sided purity methods will be the focus of testing the package for my paper. These methods were created to better handle unbalanced (2-class) classification tasks where one class is of more importance to be classified correctly (think cancer detection). As such, we will test these splitting criteria with varying levels of unbalanced data in a 2-class classification problem. 
 
 The data used in this project come from the [UCI Machine Learning repository](http://archive.ics.uci.edu/ml/), and are produced using Monte Carlo simulations to resemble properties measured by particle detectors in an accelerator to detect the Higgs Boson particle. I will create datasets from this large dataset by sampling observations to create the percentage of unbalancedness I desire. The levels of unbalancedness I will test are 1%, 2%, 5%, and 10% and compare the performance of the one-sided extremes and one-sided impurity to gini and impurity performance on the same datasets.
