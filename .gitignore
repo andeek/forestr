@@ -19,3 +19,7 @@ data-raw/*.csv
 
 #mac stuff
 .DS_Store
+
+#compiled stuff
+*.o
+*.so

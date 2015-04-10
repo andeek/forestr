@@ -19,6 +19,8 @@ C driver for Breiman & Cutler's random forest code.
 Re-written from the original main program in Fortran.
 Andy Liaw Feb. 7, 2002.
 Modifications to get the forest out Matt Wiener Feb. 26, 2002.
+
+Edited to functionalize splitting functions Andee Kaplan Apr. 10 2015
 *****************************************************************/
 
 #include <R.h>
@@ -44,7 +46,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
 	     int *nodeclass, double *xbestsplit, double *errtr,
 	     int *testdat, double *xts, int *clts, int *nts, double *countts,
 	     int *outclts, int *labelts, double *proxts, double *errts,
-             int *inbag) {
+             int *inbag, int *split_method) {
     /******************************************************************
      *  C wrapper for random forests:  get input from R and drive
      *  the Fortran routines.
@@ -94,7 +96,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     int *out, *bestsplitnext, *bestsplit, *nodepop, *jin, *nodex,
 	*nodexts, *nodestart, *ta, *ncase, *jerr, *varUsed,
 	*jtr, *classFreq, *idmove, *jvr,
-	*at, *a, *b, *mind, *nind, *jts, *oobpair;
+	*at, *a, *b, *mind, *nind, *jts, *oobpair, *split;
     int **strata_idx, *strata_size, last, ktmp, nEmpty, ntry;
 
     double av=0.0, delta=0.0;
@@ -124,6 +126,7 @@ void classRF(double *x, int *dimx, int *cl, int *ncl, int *cat, int *maxcat,
     nimp = imp ? nsample : 1;
     near = iprox ? nsample0 : 1;
     if (trace == 0) trace = Ntree + 1;
+    split = *split_method;
 
     tgini =      (double *) S_alloc(mdim, sizeof(double));
     wl =         (double *) S_alloc(nclass, sizeof(double));

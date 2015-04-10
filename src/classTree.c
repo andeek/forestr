@@ -167,7 +167,7 @@ void classTree(int *a, int *b, int *class, int *cat, int mdim, int nsample,
 
 
 void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
-                   int nClass, int *nCat, int maxCat, int ndStart, int ndEnd,
+                   int nClass, int *nCat, int maxCat, int ndstart, int ndend,
                    double *classCount, double *classCatTable,
                    int *splitVar, double *decGini, int *bestSplit,
                    int *ncase, int *splitStatus, int *inBag, int mtry,
@@ -201,7 +201,7 @@ void findBestSplit(int *a, double *b, int *class, int mDim, int nSample,
         parentNum += classCount[i] * classCount[i];
         parentDen += classCount[i];
     }
-    crit0 = pno / pdo;
+    crit0 = parentNum / parentDen;
     *splitStatus = 0;
     critmax = -1.0e25;
     for (i = 0; i < mDim; ++i) mind[i] = i;

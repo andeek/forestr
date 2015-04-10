@@ -1,18 +1,19 @@
-Package: randomForest
-Title: Breiman and Cutler's random forests for classification and
-        regression
-Version: 4.6-10
-Date: 2014-07-17
+Package: forestr
+Title: A splitting update to Breiman and Cutler's random forests for 
+       classification and regression
+Version: 0.0.1
+Date: 2015-04-10
 Depends: R (>= 2.5.0), stats
 Suggests: RColorBrewer, MASS
 Author: Fortran original by Leo Breiman and Adele Cutler, R port by
-        Andy Liaw and Matthew Wiener.
+        Andy Liaw and Matthew Wiener, extension to multiple splitting 
+        methods by Andee Kaplan.
 Description: Classification and regression based on a forest of trees
-        using random inputs.
-Maintainer: Andy Liaw <andy_liaw@merck.com>
+        using random inputs with multiple splitting criteria.
+Maintainer: Andee Kaplan <ajkaplan@iastate.edy>
 License: GPL (>= 2)
 URL: http://stat-www.berkeley.edu/users/breiman/RandomForests
-Packaged: 2014-07-17 12:18:43 UTC; liawand
+Packaged: 2015-04-10 12:18:43 UTC; ajkaplan
 NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2014-07-17 15:53:29
+Date/Publication: 2015-04-10 15:53:29

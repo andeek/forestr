@@ -13,7 +13,8 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
              proximity, oob.prox=proximity,
              norm.votes=TRUE, do.trace=FALSE,
              keep.forest=!is.null(y) && is.null(xtest), corr.bias=FALSE,
-             keep.inbag=FALSE, ...) {
+             keep.inbag=FALSE,
+             split_method = "gini", ...) {
     addclass <- is.null(y)
     classRF <- addclass || is.factor(y)
     if (!classRF && length(unique(y)) <= 5) {
@@ -37,7 +38,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
         ntest <- nrow(xtest)
         xts.row.names <- rownames(xtest)
     }
-
+    
     ## Make sure mtry is in reasonable range.
     if (mtry < 1 || mtry > p)
         warning("invalid mtry: reset to within valid range")
@@ -56,7 +57,15 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
     if (testdat && any(is.na(xtest))) stop("NA not permitted in xtest")
     if (any(is.na(y))) stop("NA not permitted in response")
     if (!is.null(ytest) && any(is.na(ytest))) stop("NA not permitted in ytest")
-
+    
+    ## splitting methods
+    split_method <- switch(split_method,
+           gini = 1,
+           entropy = 2,
+           one_sided_extreme = 3,
+           one_sided_purity = 4,
+           -1)
+    
     if (is.data.frame(x)) {
         xlevels <- lapply(x, mylevels)
         ncat <- sapply(xlevels, length)
@@ -261,6 +270,7 @@ mylevels <- function(x) if (is.factor(x)) levels(x) else 0
                     errts = error.test,
                     inbag = if (keep.inbag)
                     matrix(integer(n * ntree), n) else integer(n),
+                    split_method = split_method,
                     DUP=FALSE,
                     PACKAGE="randomForest")[-1]
         if (keep.forest) {
