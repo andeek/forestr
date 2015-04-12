@@ -1,6 +1,6 @@
 # forestr
 
-Just as a forester uses many tools to manage a forest, we may need multiple tools to manage a random forest. `forestr` is an R package (in development) that extends the `randomForest` package by including multiple splitting criteria for building the trees. Additionally, the possibility for user specified splitting criteria is left open by functionalizing the splitting methods.
+Just as a forester uses many tools to manage a forest, we may need multiple tools to manage a random forest. `forestr` is an R package (in development) that extends the random forest methodology by including multiple splitting criteria for building the trees. Additionally, the possibility for user specified splitting criteria is left open by functionalizing the splitting methods.
 
 (To be) included splitting criteria within `forestr`:
 - Gini
@@ -13,6 +13,14 @@ Just as a forester uses many tools to manage a forest, we may need multiple tool
 This is a project for STAT 503 with Di Cook in Spring 2015. Below I detail the steps that will be taken to create this package and test its use.
 
 ## Coding
+
+#### Update 4/12/2015
+
+The old plan (see below) has been temporarily dropped due to the incomplete port of `randomForest` from Fortran to R. With my lack of Fortran experience, finishing the port myself has proved to difficult. Instead of extending the `randomForest` library, I am building a random forest framework around the `rpart` library, which does include the ability for a user to create splitting functions.
+
+I am currently in the process of writing the framework.
+
+#### Old plan
 
 I will be extending the current `randomForest` package by updating the C, Fortran, and R files within its source. The main lifting will be to create splitting functions, rather than having the splitting be native within the code. Additionally, parameters will need to be created in the top-level R code to uncover the functionality to the user.
 
