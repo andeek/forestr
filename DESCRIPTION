@@ -9,4 +9,5 @@ License: What license is it under?
 LazyData: true
 Imports:
     dplyr,
-    rpart
+    rpart,
+    rpart.utils
