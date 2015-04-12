@@ -75,18 +75,23 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
     #insert into frame/path where appropriate
     for(i in 1:length(splits$locs)) {
       locs[locs == as.numeric(rownames(frame)[idx[i]])] <- unlist(splits$names[[i]][splits$locs[[i]]])
-      names(splits$path[[i]]) <- splits$names[[i]]
 
       inserts <- cbind(matrix(path[names(path) %in% names(splits$path[[i]])][[1]], nrow = length(splits$path[[i]]), ncol = length(path[names(path) %in% names(splits$path[[i]])][[1]]), byrow = TRUE),
             do.call(rbind, splits$path[[i]])[, -1])
+      rownames(inserts) <- splits$names[[i]]
       splits$path[[i]] <- split(inserts, rownames(inserts))
-      splits$path[[i]] <- lapply(splits$path[[i]], function(x) if(x[length(x)] == "root") x[-length(x)] else x)
+      splits$path[[i]] <- lapply(splits$path[[i]], function(x) {
+        if(length(x) == 1) NULL
+        else if(x[length(x)] == "root") x[-length(x)]
+        else x
+      })
     }
 
     frame <- frame[-idx, ] %>%
       rbind(do.call(rbind, splits$frame))
 
-    path <- c(path, unlist(splits$path, recursive = FALSE)
+    new_path <- unlist(splits$path, recursive = FALSE)
+    path <- c(path, new_path[new_path != "root" & !sapply(new_path, is.null)])
 
     #check if more nodes to split
     idx <- which(frame$var == "<leaf>" & frame$n > min_size & frame$dev > 0)
