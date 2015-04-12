@@ -78,7 +78,7 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
 
       inserts <- cbind(matrix(path[names(path) %in% names(splits$path[[i]])][[1]], nrow = length(splits$path[[i]]), ncol = length(path[names(path) %in% names(splits$path[[i]])][[1]]), byrow = TRUE),
             do.call(rbind, splits$path[[i]])[, -1])
-      rownames(inserts) <- splits$names[[i]]
+      rownames(inserts) <- splits$names[[i]] #TODO: this isn't working... non-unique node numbers
       splits$path[[i]] <- split(inserts, rownames(inserts))
       splits$path[[i]] <- lapply(splits$path[[i]], function(x) {
         if(length(x) == 1) NULL
@@ -89,6 +89,7 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
 
     frame <- frame[-idx, ] %>%
       rbind(do.call(rbind, splits$frame))
+    #TODO rename rows of data.frame corresponding to row node numbers
 
     new_path <- unlist(splits$path, recursive = FALSE)
     path <- c(path, new_path[new_path != "root" & !sapply(new_path, is.null)])
