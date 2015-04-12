@@ -49,56 +49,57 @@ forest <- function(formula, data, mvars, B = 1000, min_size, ...){
 grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
   #control function for planting trees
   tree <- plant_tree(formula, data_star_b, mvars, min_size, ...)
-  frame <- tree$frame %>%
-    select(-starts_with("yval2")) %>%
-    mutate(node = as.numeric(rownames(tree$frame)))
+  frame <- tree$frame %>% select(var, n, wt, dev, yval)
+  path <- path.rpart(tree, 1:nrow(frame), print.it = FALSE)
+  locs <- tree$where
+  idx <- which(frame$var == "<leaf>" & frame$n > min_size & frame$dev > 0)
+  ylevels <- attr(tree, "ylevels")
+  split <- length(idx) > 0
+  max_node <- max(as.numeric(names(path))) #store for unique naming
 
-  frame %>%
-    filter(var == "<leaf>") %>%
-    group_by(node) %>%
-    mutate(continue = n > min_size && dim(table(tree$y[tree$where == node])) > 1) %>%
-    filter(continue) -> nodes_to_split
-
-  split <- nrow(nodes_to_split) > 0
   while(split) {
-
     #split notes that need to be
-    nodes_to_split %>%
+    frame[idx, ] %>%
+      mutate(node = names(path[idx])) %>%
       group_by(node) %>%
-      do(split = plant_tree(formula, data_star_b[tree$where == node,], mvars, min_size, ...)) -> tree1
+      do(tree = plant_tree(formula, data_star_b[locs == .$node, ], mvars, min_size, ...)) -> split_nodes
 
-    #insert into frame where appropriate
-    list_frame <- split(frame, frame$node)
-    remove <- NULL
-    lapply(names(list_frame), function(x) {
-      if(list_frame[[x]]$node %in% tree1$node) {
-        remove <<- c(remove, x)
-        tmp <- tree1 %>% filter(node == as.numeric(x))
-        tmp$split[[1]]$frame %>%
-          select(-starts_with("yval2")) %>%
-          mutate(node = c(x, (as.numeric(x) + as.numeric(rownames(.)))[-1])) -> tmp
+    split_nodes %>%
+      group_by(node) %>%
+      do(frame = .$tree[[1]]$frame %>% select(var, n, wt, dev, yval),
+         path = path.rpart(.$tree[[1]], 1:nrow(.$tree[[1]]$frame), print.it = FALSE),
+         locs = .$tree[[1]]$where,
+         ylevels = attr(.$tree[[1]], "ylevels"),
+         names = c(.$node, max_node + 1:nrow(.$tree[[1]]$frame))[1:nrow(.$tree[[1]]$frame)]) -> splits
 
-        split(tmp, tmp$node)
-      }
-    }) -> list_frame2
-    frame <- do.call(rbind, c(list_frame[!(names(list_frame) %in% remove)], unlist(list_frame2, recursive = FALSE)))
+    #insert into frame/path where appropriate
+    for(i in 1:length(splits$locs)) {
+      locs[locs == as.numeric(rownames(frame)[idx[i]])] <- unlist(splits$names[[i]][splits$locs[[i]]])
+      names(splits$path[[i]]) <- splits$names[[i]]
+
+      inserts <- cbind(matrix(path[names(path) %in% names(splits$path[[i]])][[1]], nrow = length(splits$path[[i]]), ncol = length(path[names(path) %in% names(splits$path[[i]])][[1]]), byrow = TRUE),
+            do.call(rbind, splits$path[[i]])[, -1])
+      splits$path[[i]] <- split(inserts, rownames(inserts))
+      splits$path[[i]] <- lapply(splits$path[[i]], function(x) if(x[length(x)] == "root") x[-length(x)] else x)
+    }
+
+    frame <- frame[-idx, ] %>%
+      rbind(do.call(rbind, splits$frame))
+
+    path <- c(path, unlist(splits$path, recursive = FALSE)
 
     #check if more nodes to split
-    frame %>%
-      filter(var == "<leaf>") %>%
-      group_by(node) %>%
-      mutate(continue = n > min_size && dim(table(tree$y[tree$where == node])) > 1) %>%
-      filter(continue) -> nodes_to_split
-
-    split <- nrow(nodes_to_split) > 0
+    idx <- which(frame$var == "<leaf>" & frame$n > min_size & frame$dev > 0)
+    split <- length(splits$idx[[1]]) > 0
+    max_node <- max(as.numeric(names(path))) #store for unique naming
   }
-  return(frame)
+  return(list(frame = frame, path = path, where = locs))
 }
 
 plant_tree <- function(formula, data_star_b, mvars, min_size, ...) {
   #function to be used recursively to grow the forest
   #split at current node with random variables (only 1 level deep)
-  new_formula <- select_vars(formula, data_star_b, mvars)
+  new_formula <- select_mvars(formula, data_star_b, mvars)
   stub <- rpart(new_formula, data_star_b, control = rpart.control(maxdepth = 1, minbucket = min_size)) #TODO change splitting mechanism
   return(stub)
 }
@@ -109,7 +110,7 @@ draw_boot_sample <- function(data) {
   return(data[sample(1:n, replace = TRUE), ])
 }
 
-select_vars <- function(formula, data_star_b, mvars) {
+select_mvars <- function(formula, data_star_b, mvars) {
   #select a random subset of variables
   right <- paste(sample(attr(terms(formula, data = data_star_b), "term.labels"), mvars, replace = FALSE), collapse = " + ")
   left <- as.character(formula)[[2]]
