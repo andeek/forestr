@@ -16,7 +16,7 @@ This is a project for STAT 503 with Di Cook in Spring 2015. Below I detail the s
 
 #### Update 4/12/2015
 
-The old plan (see below) has been temporarily dropped due to the incomplete port of `randomForest` from Fortran to R. With my lack of Fortran experience, finishing the port myself has proved to difficult. Instead of extending the `randomForest` library, I am building a random forest framework around the `rpart` library, which does include the ability for a user to create splitting functions.
+The old plan (see below) has been temporarily dropped due to the incomplete port of `randomForest` from Fortran to C. With my lack of Fortran experience, finishing the port myself has proved to difficult. Instead of extending the `randomForest` library, I am building a random forest framework around the `rpart` library, which does include the ability for a user to create splitting functions.
 
 I am currently in the process of writing the framework.
 
