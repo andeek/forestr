@@ -99,7 +99,11 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
     split <- length(splits$idx[[1]]) > 0
     max_node <- max(as.numeric(names(path))) #store for unique naming
   }
-  return(list(frame = frame, path = path, where = locs))
+
+  res <- list(frame = frame, path = path, where = locs)
+  class(res) <- "forest_tree"
+
+  return(res)
 }
 
 plant_tree <- function(formula, data_star_b, mvars, min_size, ...) {
