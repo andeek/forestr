@@ -56,7 +56,8 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
   ylevels <- attr(tree, "ylevels")
   split <- length(idx) > 0
   max_node <- max(as.numeric(names(path))) #store for unique naming
-
+  
+  unsplit <- NULL
   while(split) {
     #split notes that need to be
     frame[idx, ] %>%
@@ -69,16 +70,28 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
       do(frame = .$tree[[1]]$frame %>% select(var, n, wt, dev, yval),
          path = path.rpart(.$tree[[1]], 1:nrow(.$tree[[1]]$frame), print.it = FALSE),
          locs = .$tree[[1]]$where,
-         ylevels = attr(.$tree[[1]], "ylevels"),
-         names = c(.$node, max_node + 1:nrow(.$tree[[1]]$frame))[1:nrow(.$tree[[1]]$frame)]) -> splits
-
+         ylevels = attr(.$tree[[1]], "ylevels")) %>%
+         mutate(split = nrow(frame)) -> splits    
+    
+    #keep track of and remove nodes that aren't getting split for some reason
+    unsplit <- c(unsplit, splits[splits$split == 1, "node"] %>% data.matrix)
+    splits <- splits %>% filter(split > 1) 
+    idx <- which(rownames(frame) %in% splits$node)
+    if(nrow(splits) == 0) break
+    
     #insert into frame/path where appropriate
-    for(i in 1:length(splits$locs)) {
-      locs[locs == as.numeric(rownames(frame)[idx[i]])] <- unlist(splits$names[[i]][splits$locs[[i]]])
+    for(i in 1:nrow(splits)) {
+      
+      node_names <- c(as.numeric(splits$node[i]), (nrow(splits$frame[[i]]) > 1) * (max_node + 1:(nrow(splits$frame[[i]]) - 1)))
+      node_names <- node_names[node_names > 0]
+      max_node <<- max(max_node, max(node_names))
+      
+      locs[locs == as.numeric(rownames(frame)[idx[i]])] <- node_names[splits$locs[[i]]]
 
-      inserts <- cbind(matrix(path[names(path) %in% names(splits$path[[i]])][[1]], nrow = length(splits$path[[i]]), ncol = length(path[names(path) %in% names(splits$path[[i]])][[1]]), byrow = TRUE),
-            do.call(rbind, splits$path[[i]])[, -1])
-      rownames(inserts) <- splits$names[[i]] #TODO: this isn't working... non-unique node numbers
+      inserts <- cbind(matrix(rep(path[splits$node[[i]]][[1]], length(splits$path[[i]])), nrow = length(splits$path[[i]]), byrow = TRUE),
+                       do.call(rbind, splits$path[[i]])[, -1])
+      rownames(inserts) <- node_names
+      
       splits$path[[i]] <- split(inserts, rownames(inserts))
       splits$path[[i]] <- lapply(splits$path[[i]], function(x) {
         if(length(x) == 1) NULL
@@ -89,15 +102,19 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
 
     frame <- frame[-idx, ] %>%
       rbind(do.call(rbind, splits$frame))
-    #TODO rename rows of data.frame corresponding to row node numbers
 
     new_path <- unlist(splits$path, recursive = FALSE)
-    path <- c(path, new_path[new_path != "root" & !sapply(new_path, is.null)])
-
+    path <- c(path[-idx], new_path[!sapply(new_path, is.null)])
+    
+    #rename rows of data.frame corresponding to row node numbers
+    rownames(frame) <- names(path)
+    
     #check if more nodes to split
     idx <- which(frame$var == "<leaf>" & frame$n > min_size & frame$dev > 0)
-    split <- length(splits$idx[[1]]) > 0
     max_node <- max(as.numeric(names(path))) #store for unique naming
+    split <- length(idx) > 0
+    #stop trying to split if unsuccessful after 5 times splitting the same variable
+    if(split) idx <- which(rownames(frame) %in% setdiff(rownames(frame)[idx], names(table(unsplit))[table(unsplit) >= 5]))
   }
 
   res <- list(frame = frame, path = path, where = locs)
