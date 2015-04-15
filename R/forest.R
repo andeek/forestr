@@ -39,15 +39,17 @@ forest <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
     group_by(b) %>%
     do(sample = draw_boot_sample(data)) -> data_star
 
-  safe_grow <- failwith(NULL, grow_forest, quiet = TRUE)
+  safe_grow <- failwith(NULL, grow_forest, quiet = FALSE)
 
   data_star %>%
     group_by(b) %>%
-    do(rf = suppressWarnings(safe_grow(formula, .$sample[[1]], mvars, min_size))) -> rf
+    do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size)) -> rf
 
   data_star %>%
     left_join(rf) -> results
 
+  #TODO OOB
+  #TODO predict forest_tree, forest, importance, vote matrix
   #TODO class results as "forestr"
   return(results)
 }
@@ -75,7 +77,7 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
          path = path.rpart(.$tree[[1]], 1:nrow(.$tree[[1]]$frame), print.it = FALSE),
          locs = .$tree[[1]]$where,
          ylevels = attr(.$tree[[1]], "ylevels")) %>%
-         mutate(split = nrow(frame)) -> splits
+      mutate(split = nrow(frame)) -> splits
 
     #keep track of and remove nodes that aren't getting split for some reason
     unsplit <- c(unsplit, splits[splits$split == 1, "node"] %>% data.matrix)
@@ -84,10 +86,10 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
     if(nrow(splits) > 0) {
       #insert into frame/path where appropriate
       for(i in 1:nrow(splits)) {
-        #TODO: fix. this doesn't work
+        #TODO: fix. this doesn't work, not sure when though...
         node_names <- c(as.numeric(splits$node[i]), (nrow(splits$frame[[i]]) > 1) * (max_node + 1:(nrow(splits$frame[[i]]) - 1)))
         node_names <- node_names[node_names > 0]
-        max_node <<- max(max_node, max(node_names))
+        max_node <- max(max_node, max(node_names))
 
         locs[locs == as.numeric(rownames(frame)[idx[i]])] <- node_names[splits$locs[[i]]]
 
@@ -98,7 +100,9 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
         splits$path[[i]] <- split(inserts, rownames(inserts))
         splits$path[[i]] <- lapply(splits$path[[i]], function(x) { if(x[length(x)] == "root") x[-length(x)] else x })
 
+        #names and yvals fixed to top level
         rownames(splits$frame[[i]]) <- names(splits$path[[i]])
+        splits$frame[[i]][ , "yval"] <- sapply(splits$ylevels[[i]][splits$frame[[i]]$yval], grep, x = ylevels)
       }
 
       frame <- frame[-idx, ] %>%
@@ -112,9 +116,10 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
     idx <- which(frame$var == "<leaf>" & frame$n > min_size & frame$dev > 0)
     max_node <- max(as.numeric(names(path))) #store for unique naming
     split <- length(idx) > 0
-    #stop trying to split if unsuccessful after 5 times splitting the same variable
+    #stop trying to split if unsuccessful after 3 times splitting the same variable
     if(split) idx <- which(rownames(frame) %in% setdiff(rownames(frame)[idx], names(table(unsplit))[table(unsplit) >= 3]))
   }
+
   yval <- ylevels[frame[as.character(locs), "yval"]]
   res <- list(frame = frame, path = path, where = locs, yval = yval)
   class(res) <- "forest_tree"
@@ -133,7 +138,8 @@ plant_tree <- function(formula, data_star_b, mvars, min_size, ...) {
 draw_boot_sample <- function(data) {
   #draw a bootstrap sample of observations
   n <- nrow(data)
-  return(data[sample(1:n, replace = TRUE), ])
+  idx <- sample(1:n, replace = TRUE)
+  return(cbind(idx, data[idx, ]))
 }
 
 select_mvars <- function(formula, data_star_b, mvars) {
