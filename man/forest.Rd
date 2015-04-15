@@ -4,17 +4,24 @@
 \alias{forest}
 \title{Forest}
 \usage{
-forest(formula, data, mvars, B = 1000)
+forest(formula, data, mvars = NULL, B = 500, min_size = NULL, ...)
 }
 \arguments{
 \item{formula}{formula specification of forest variables}
 
 \item{data}{dataframe with y and x variables}
 
+\item{mvars}{number of variables to sample in each node of
+the tree during building the random forest}
+
 \item{B}{number of bootstrap samples}
+
+\item{min_size}{minimum size of a terminal node}
+
+\item{...}{extra parameters to pass to rpart}
 }
 \value{
-A data.frame with columns
+A data.frame of class forestr with columns
   \item{b}{1:B}
   \item{sample}{Bootstrap sampled datasets.}
   \item{rf}{Random forest object}

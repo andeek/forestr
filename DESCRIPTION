@@ -5,9 +5,8 @@ Authors@R: person("Andee", "Kaplan", , "ajkaplan@iastate.edu", role = c("aut", "
 Description: Classification and regression based on a forest of trees
         using random inputs with multiple splitting criteria.
 Depends: R (>= 3.1.3)
-License: MIT License
+License: GPL-3
 LazyData: true
 Imports:
     dplyr,
-    rpart,
-    rpart.utils
+    rpart
