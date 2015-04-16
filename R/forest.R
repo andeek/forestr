@@ -48,8 +48,7 @@ forest <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
 
   results %>%
     group_by(b) %>%
-    do(pred = predict(.$rf[[1]], data[-unique(.$sample[[1]][, "idx"]), ]), true = y[-unique(.$sample[[1]][, "idx"])]) %>%
-    mutate(error = length(pred) != length(true)) -> tmp
+    do(pred = data.frame(pred = predict(.$rf[[1]], data[-unique(.$sample[[1]][, "idx"]), ]), true = y[-unique(.$sample[[1]][, "idx"])])) %>%
     right_join(results) -> results
 
   preds <- do.call(rbind, results$pred)
@@ -104,6 +103,7 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
     unsplit <- c(unsplit, splits[splits$split == 1, "node"] %>% data.matrix)
     splits <- splits %>% filter(split > 1)
     idx <- which(rownames(frame) %in% splits$node)
+
     if(nrow(splits) > 0) {
       #insert into frame/path where appropriate
       for(i in 1:nrow(splits)) {
@@ -118,7 +118,7 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
                          do.call(rbind, splits$path[[i]])[, -1])
         rownames(inserts) <- node_names
 
-        splits$path[[i]] <- split(inserts, rownames(inserts))
+        splits$path[[i]] <- split(inserts, as.numeric(rownames(inserts))) #as.numeric because otherwise out of order
         splits$path[[i]] <- lapply(splits$path[[i]], function(x) { if(x[length(x)] == "root") x[-length(x)] else x })
 
         #names and yvals fixed to top level
