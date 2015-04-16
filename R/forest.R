@@ -35,36 +35,44 @@ forest <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
   if(is.null(mvars)) mvars <- if(!is.null(y) & !is.factor(y)) max(floor((ncol(data) - 1)/3), 1) else floor(sqrt(ncol(data) - 1))
   if(is.null(min_size)) min_size = if (!is.null(y) && !is.factor(y)) 5 else 1
 
-  data.frame(b = 1:B) %>%
-    group_by(b) %>%
-    do(sample = draw_boot_sample(data)) -> data_star
-
   safe_grow <- failwith(NULL, grow_forest, quiet = TRUE)
 
-  data_star %>%
+  data.frame(b = 1:B) %>%
     group_by(b) %>%
-    do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size)) -> rf
-
-  data_star %>%
-    left_join(rf) -> results
+    do(sample = draw_boot_sample(data)) -> results
 
   results %>%
     group_by(b) %>%
-    do(pred = predict(.$rf[[1]], data[-.$sample[[1]][, "idx"], ])) -> pred
+    do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size)) %>%
+    right_join(data_star) -> results
 
   results %>%
-    left_join(pred) -> results
+    group_by(b) %>%
+    do(pred = predict(.$rf[[1]], data[-unique(.$sample[[1]][, "idx"]), ]), true = y[-unique(.$sample[[1]][, "idx"])]) %>%
+    mutate(error = length(pred) != length(true)) -> tmp
+    right_join(results) -> results
 
-  #TODO OOB
+  preds <- do.call(rbind, results$pred)
+  oob_error <- mean(loss(preds$pred, preds$true)) #TODO: where are these NAs coming from?
+
+  if(class(y) %in% c("factor", "character")) {
+     preds %>%
+      table() -> oob_table
+
+     oob_error <- list(table = oob_table, error = oob_error)
+  }
+
 
   #TODO predict forest, importance, vote matrix
-  #TODO class results as "forestr"
-  class(results) <- "forestr"
-  return(results)
+  #TODO make summary/print functions
+
+  res <- list(oob = oob_error, raw_results = results)
+  class(res) <- "forestr"
+  return(res)
 }
 
 loss <- function(pred, y) {
-  if(class(y) %in% c("factor", "character")) sum(pred != y) else sum((pred - y)^2)
+  if(class(y) %in% c("factor", "character")) pred != y else (pred - y)^2
 }
 
 grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
@@ -99,7 +107,7 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
     if(nrow(splits) > 0) {
       #insert into frame/path where appropriate
       for(i in 1:nrow(splits)) {
-        #TODO: fix. this doesn't work, not sure when though...
+        #TODO: fix. this doesn't work, not sure when though... issues with length sometimes -> factor?
         node_names <- c(as.numeric(splits$node[i]), (nrow(splits$frame[[i]]) > 1) * (max_node + 1:(nrow(splits$frame[[i]]) - 1)))
         node_names <- node_names[node_names > 0]
         max_node <- max(max_node, max(node_names))

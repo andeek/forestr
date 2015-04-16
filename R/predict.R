@@ -30,7 +30,7 @@
 
 
 `predict.forest_tree` <- function(object, newdata) {
-  stopifnot(identical(names(newdata), names(object$data)))
+  stopifnot(identical(names(object$data), names(newdata)))
 
   newdata$idx <- 1:nrow(newdata)
   rules <- unlist(lapply(object$path[rownames(object$frame)[object$frame$var == "<leaf>"]], function(x) paste(x[-1], collapse = " & ")))
@@ -39,7 +39,8 @@
 
   do.call(rbind, split) -> pred
   pred %>%
-    mutate(yvals = sapply(strsplit(rownames(pred), "[.]"), function(x) x[1])) %>%
+    mutate(yvals = substr(rownames(pred), 1, 1)) %>%
+    arrange(idx) %>%
     select(yvals) %>%
     unlist(use.names = FALSE) %>% as.numeric -> pred
   object$ylevels[pred]
