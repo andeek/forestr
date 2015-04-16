@@ -5,11 +5,9 @@
 #'
 #' @param object an object of class forest as created by \code{forest}
 #' @param newdata dataframe containing new data
+#' @param ... not currently used
 #'
-#' @return A data.frame of class forestr with columns
-#'   \item{b}{1:B}
-#'   \item{sample}{Bootstrap sampled datasets.}
-#'   \item{rf}{Random forest object}
+#' @return currently nothing
 #'
 #' @examples
 #'
@@ -19,17 +17,17 @@
 #' @name predict
 
 
-#' @rdname predict.forest
+#' @rdname predict
 #'
 #' @import dplyr
 #'
 #' @export
-`predict.forest` <- function(object, newdata) {
+predict.forestr <- function(object, newdata, ...) {
 
 }
 
 
-`predict.forest_tree` <- function(object, newdata) {
+predict.forest_tree <- function(object, newdata, ...) {
   stopifnot(identical(names(object$data), names(newdata)))
 
   newdata$idx <- 1:nrow(newdata)

@@ -21,10 +21,9 @@ the tree during building the random forest}
 \item{...}{extra parameters to pass to rpart}
 }
 \value{
-A data.frame of class forestr with columns
-  \item{b}{1:B}
-  \item{sample}{Bootstrap sampled datasets.}
-  \item{rf}{Random forest object}
+A list of class forestr with objects
+  \item{oob}{Out of bag error for the model}
+  \item{raw_results}{A data frame with sampled data, random forest tree objects, and predicted values.}
 }
 \description{
 Runs a random forest with user specified splitting criteria

@@ -11,10 +11,9 @@
 #' @param min_size minimum size of a terminal node
 #' @param ... extra parameters to pass to rpart
 #'
-#' @return A data.frame of class forestr with columns
-#'   \item{b}{1:B}
-#'   \item{sample}{Bootstrap sampled datasets.}
-#'   \item{rf}{Random forest object}
+#' @return A list of class forestr with objects
+#'   \item{oob}{Out of bag error for the model}
+#'   \item{raw_results}{A data frame with sampled data, random forest tree objects, and predicted values.}
 #'
 #' @examples
 #'
@@ -44,7 +43,7 @@ forest <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
   results %>%
     group_by(b) %>%
     do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size)) %>%
-    right_join(data_star) -> results
+    right_join(results) -> results
 
   results %>%
     group_by(b) %>%
