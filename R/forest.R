@@ -39,7 +39,7 @@ forest <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
     group_by(b) %>%
     do(sample = draw_boot_sample(data)) -> data_star
 
-  safe_grow <- failwith(NULL, grow_forest, quiet = FALSE)
+  safe_grow <- failwith(NULL, grow_forest, quiet = TRUE)
 
   data_star %>%
     group_by(b) %>%
@@ -48,10 +48,23 @@ forest <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
   data_star %>%
     left_join(rf) -> results
 
+  results %>%
+    group_by(b) %>%
+    do(pred = predict(.$rf[[1]], data[-.$sample[[1]][, "idx"], ])) -> pred
+
+  results %>%
+    left_join(pred) -> results
+
   #TODO OOB
-  #TODO predict forest_tree, forest, importance, vote matrix
+
+  #TODO predict forest, importance, vote matrix
   #TODO class results as "forestr"
+  class(results) <- "forestr"
   return(results)
+}
+
+loss <- function(pred, y) {
+  if(class(y) %in% c("factor", "character")) sum(pred != y) else sum((pred - y)^2)
 }
 
 grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
@@ -121,7 +134,7 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
   }
 
   yval <- ylevels[frame[as.character(locs), "yval"]]
-  res <- list(frame = frame, path = path, where = locs, yval = yval)
+  res <- list(frame = frame, path = path, where = locs, yval = yval, data = data_star_b, ylevels = ylevels)
   class(res) <- "forest_tree"
 
   return(res)
