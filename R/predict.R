@@ -37,11 +37,11 @@ predict.forestr <- function(object, newdata, ...) {
   if(object$type == "classification") {
     #votes
     votes <- preds %>% group_by(row, pred) %>% summarise(count = n()) %>% spread(pred, count, fill = 0)
-    votes$vote <- names(votes)[apply(votes[, -1], 1, which.max) + 1]
+    votes$value <- names(votes)[apply(votes[, -1], 1, which.max) + 1]
     votes <- inner_join(votes, data.frame(row = rownames(newdata), idx = 1:nrow(newdata)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
   } else {
     #TODO: stupid name convention, consider changing for regression
-    votes <- preds %>% group_by(row) %>% summarise(vote = mean(pred))
+    votes <- preds %>% group_by(row) %>% summarise(value = mean(pred))
     votes <- inner_join(votes, data.frame(row = rownames(newdata), idx = 1:nrow(newdata)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
   }
   return(list(response = votes$vote, vote = votes))
@@ -56,13 +56,19 @@ predict.forest_tree <- function(object, newdata, ...) {
   split <- lapply(1:length(rules), function(x) data.frame(idx = newdata[eval(parse(text = rules[x]), envir = newdata), "idx"]))
   names(split) <- object$frame[object$frame$var == "<leaf>", "yval"]
 
-  do.call(rbind, split) -> pred
-  pred %>%
-    mutate(yvals = substr(rownames(pred), 1, 1)) %>%
+#   do.call(rbind, split) -> pred
+#   pred %>%
+#     mutate(yvals = substr(rownames(pred), 1, 1)) %>%
+#     arrange(idx) %>%
+#     select(yvals) %>%
+#     unlist(use.names = FALSE) %>% as.numeric -> pred
+#   object$ylevels[pred]
+
+  do.call(rbind, lapply(1:length(split), function(x) split[[x]] %>% mutate(yval = names(split)[x]))) %>%
     arrange(idx) %>%
-    select(yvals) %>%
-    unlist(use.names = FALSE) %>% as.numeric -> pred
-  object$ylevels[pred]
+    select(yval) %>% data.matrix() %>% as.numeric() -> pred
+
+  if(object$type == "classification") object$ylevels[pred] else pred
 }
 
 

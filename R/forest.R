@@ -53,7 +53,7 @@ forest <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
   results %>%
     ungroup() %>%
     group_by(b) %>%
-    do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size)) %>%
+    do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type)) %>%
     right_join(results, by = "b") -> results
 
   results %>%
@@ -67,16 +67,16 @@ forest <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
 
   if(type == "classification") {
     votes <- preds %>% group_by(row, pred) %>% summarise(count = n()) %>% spread(pred, count, fill = 0)
-    votes$vote <- names(votes)[apply(votes[, -1], 1, which.max) + 1]
+    votes$value <- names(votes)[apply(votes[, -1], 1, which.max) + 1]
     votes <- inner_join(votes, data.frame(row = rownames(data), idx = 1:nrow(data)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
 
-    table(votes$vote, y) -> misclass_table
+    table(votes$value, y) -> misclass_table
   } else {
     #TODO: stupid name convention, consider changing for regression
-    votes <- preds %>% group_by(row) %>% summarise(vote = mean(pred))
+    votes <- preds %>% group_by(row) %>% summarise(value = mean(pred))
     votes <- inner_join(votes, data.frame(row = rownames(data), idx = 1:nrow(data)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
   }
-  oob_error <- mean(loss(votes$vote, y))
+  oob_error <- mean(loss(votes$value, y))
 
   #TODO importance, proximity
   #TODO make summary/print functions
@@ -92,7 +92,7 @@ loss <- function(pred, y) {
   if(class(y) %in% c("factor", "character")) pred != y else (pred - y)^2
 }
 
-grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
+grow_forest <- function(formula, data_star_b, mvars, min_size, type, ...) {
   #control function for planting trees
   tree <- plant_tree(formula, data_star_b, mvars, min_size, ...)
   frame <- tree$frame %>% select(var, n, wt, dev, yval)
@@ -143,7 +143,7 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
 
         #names and yvals fixed to top level
         rownames(splits$frame[[i]]) <- names(splits$path[[i]])
-        splits$frame[[i]][ , "yval"] <- sapply(splits$ylevels[[i]][splits$frame[[i]]$yval], grep, x = ylevels)
+        if(type == "classification") splits$frame[[i]][ , "yval"] <- sapply(splits$ylevels[[i]][splits$frame[[i]]$yval], grep, x = ylevels)
       }
 
       frame <- frame[-idx, ] %>%
@@ -161,8 +161,8 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
     if(split) idx <- which(rownames(frame) %in% setdiff(rownames(frame)[idx], names(table(unsplit))[table(unsplit) >= 3]))
   }
 
-  yval <- ylevels[frame[as.character(locs), "yval"]]
-  res <- list(frame = frame, path = path, where = locs, yval = yval, data = data_star_b, ylevels = ylevels)
+  if(type == "classification") yval <- ylevels[frame[as.character(locs), "yval"]] else yval <- frame[as.character(locs), "yval"]
+  res <- list(frame = frame, path = path, where = locs, yval = yval, data = data_star_b, ylevels = ylevels, type = type)
   class(res) <- "forest_tree"
 
   return(res)
