@@ -13,7 +13,7 @@
 #'
 #' @examples
 #'
-#' mtcars.forest <- forest(factor(cyl) ~ ., data = mtcars[1:25, ])
+#' mtcars.forest <- forestr(factor(cyl) ~ ., data = mtcars[1:25, ])
 #' predict(mtcars.forest, mtcars[26:32, ])
 #'
 #' @name predict
@@ -44,7 +44,7 @@ predict.forestr <- function(object, newdata, ...) {
     votes <- preds %>% group_by(row) %>% summarise(value = mean(pred))
     votes <- inner_join(votes, data.frame(row = rownames(newdata), idx = 1:nrow(newdata)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
   }
-  return(list(response = votes$vote, vote = votes))
+  return(list(response = votes$value, vote = votes))
 }
 
 
