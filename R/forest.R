@@ -11,9 +11,14 @@
 #' @param min_size minimum size of a terminal node
 #' @param ... extra parameters to pass to rpart
 #'
-#' @return A list of class forestr with objects
-#'   \item{oob}{Out of bag error for the model}
-#'   \item{raw_results}{A data frame with sampled data, random forest tree objects, and predicted values.}
+#' @return A. object of class \code{forestr} with components
+#'   \item{call}{the original call to \code{forest}}
+#'   \item{type}{one of \code{regression} or \code{classification}}
+#'   \item{predicted}{the predicted values of the input data based on out of bag samples}
+#'   \item{importance}{mean decrease in accurace over all classes for each variable in the model}
+#'   \item{votes}{matrix giving the votes for each class on each observation (classification)}
+#'   \item{oob}{out of bag error for the model including confusion matrix (classification)}
+#'   \item{raw_results}{data frame with sampled data, random forest tree objects, and predicted values}
 #'
 #' @examples
 #'
@@ -25,12 +30,17 @@
 #'
 #' @import dplyr
 #' @import rpart
+#' @importFrom tidyr spread
 #'
 #' @export
 forest <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
-  #TODO: error check parameters
-  #default vals
+
   y <-  eval(parse(text = as.character(formula)[2]), envir = data)
+  #TODO: error check parameters
+  stopifnot(class(y) %in% c("factor", "character", "integer", "numeric"))
+
+  #default vals
+  type <- ifelse(class(y) %in% c("factor", "character"), "classification", "regression")
   if(is.null(mvars)) mvars <- if(!is.null(y) & !is.factor(y)) max(floor((ncol(data) - 1)/3), 1) else floor(sqrt(ncol(data) - 1))
   if(is.null(min_size)) min_size = if (!is.null(y) && !is.factor(y)) 5 else 1
 
@@ -41,30 +51,37 @@ forest <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
     do(sample = draw_boot_sample(data)) -> results
 
   results %>%
+    ungroup() %>%
     group_by(b) %>%
     do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size)) %>%
-    right_join(results) -> results
+    right_join(results, by = "b") -> results
 
   results %>%
+    ungroup() %>%
     group_by(b) %>%
     do(pred = data.frame(pred = predict(.$rf[[1]], data[-unique(.$sample[[1]][, "idx"]), ]), true = y[-unique(.$sample[[1]][, "idx"])])) %>%
-    right_join(results) -> results
+    right_join(results, by = "b") -> results
 
-  preds <- do.call(rbind, results$pred)
-  oob_error <- mean(loss(preds$pred, preds$true)) #TODO: where are these NAs coming from?
+  data.frame(row = do.call(c, lapply(results$sample, function(x) rownames(data)[(1:nrow(data))[-unique(x$idx)]])),
+             do.call(rbind, results$pred)) -> preds
 
-  if(class(y) %in% c("factor", "character")) {
-     preds %>%
-      table() -> oob_table
+  votes <- preds %>% group_by(row, pred) %>% summarise(count = n()) %>% spread(pred, count, fill = 0)
+  votes$vote <- names(votes)[apply(votes[, -1], 1, which.max) + 1]
+  votes <- inner_join(votes, data.frame(row = rownames(data), idx = 1:nrow(data)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
 
-     oob_error <- list(table = oob_table, error = oob_error)
+  oob_error <- mean(loss(votes$vote, y))
+  if(type == "classification") {
+      table(votes$vote, y) -> misclass_table
   }
 
 
-  #TODO predict forest, importance, vote matrix
+
+  #TODO predict forest, importance
   #TODO make summary/print functions
 
-  res <- list(oob = oob_error, raw_results = results)
+  res <- list(call = match.call(), type = type, votes = votes, oob = oob_error)
+  if(type == "classification") res$misclass <- misclass_table
+  res$raw_results <- results
   class(res) <- "forestr"
   return(res)
 }
@@ -89,8 +106,10 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, ...) {
     #split notes that need to be
     frame[idx, ] %>%
       mutate(node = names(path[idx])) %>%
+      ungroup() %>%
       group_by(node) %>%
       do(tree = plant_tree(formula, data_star_b[locs == .$node, ], mvars, min_size, ...)) %>%
+      ungroup() %>%
       group_by(node) %>%
       do(frame = .$tree[[1]]$frame %>% select(var, n, wt, dev, yval),
          path = path.rpart(.$tree[[1]], 1:nrow(.$tree[[1]]$frame), print.it = FALSE),

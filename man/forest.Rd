@@ -21,9 +21,14 @@ the tree during building the random forest}
 \item{...}{extra parameters to pass to rpart}
 }
 \value{
-A list of class forestr with objects
-  \item{oob}{Out of bag error for the model}
-  \item{raw_results}{A data frame with sampled data, random forest tree objects, and predicted values.}
+A. object of class \code{forestr} with components
+  \item{call}{the original call to \code{forest}}
+  \item{type}{one of \code{regression} or \code{classification}}
+  \item{predicted}{the predicted values of the input data based on out of bag samples}
+  \item{importance}{mean decrease in accurace over all classes for each variable in the model}
+  \item{votes}{matrix giving the votes for each class on each observation (classification)}
+  \item{oob}{out of bag error for the model including confusion matrix (classification)}
+  \item{raw_results}{data frame with sampled data, random forest tree objects, and predicted values}
 }
 \description{
 Runs a random forest with user specified splitting criteria
