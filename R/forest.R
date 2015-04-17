@@ -65,18 +65,20 @@ forest <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
   data.frame(row = do.call(c, lapply(results$sample, function(x) rownames(data)[(1:nrow(data))[-unique(x$idx)]])),
              do.call(rbind, results$pred)) -> preds
 
-  votes <- preds %>% group_by(row, pred) %>% summarise(count = n()) %>% spread(pred, count, fill = 0)
-  votes$vote <- names(votes)[apply(votes[, -1], 1, which.max) + 1]
-  votes <- inner_join(votes, data.frame(row = rownames(data), idx = 1:nrow(data)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
-
-  oob_error <- mean(loss(votes$vote, y))
   if(type == "classification") {
-      table(votes$vote, y) -> misclass_table
+    votes <- preds %>% group_by(row, pred) %>% summarise(count = n()) %>% spread(pred, count, fill = 0)
+    votes$vote <- names(votes)[apply(votes[, -1], 1, which.max) + 1]
+    votes <- inner_join(votes, data.frame(row = rownames(data), idx = 1:nrow(data)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
+
+    table(votes$vote, y) -> misclass_table
+  } else {
+    #TODO: stupid name convention, consider changing for regression
+    votes <- preds %>% group_by(row) %>% summarise(vote = mean(pred))
+    votes <- inner_join(votes, data.frame(row = rownames(data), idx = 1:nrow(data)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
   }
+  oob_error <- mean(loss(votes$vote, y))
 
-
-
-  #TODO importance, proximity, fix for regression. currently only predicting things for classification
+  #TODO importance, proximity
   #TODO make summary/print functions
 
   res <- list(call = match.call(), type = type, votes = votes, oob = oob_error)

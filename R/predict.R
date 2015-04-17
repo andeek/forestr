@@ -34,11 +34,16 @@ predict.forestr <- function(object, newdata, ...) {
 
   preds <- do.call(rbind, preds$pred)
 
-  #votes
-  votes <- preds %>% group_by(row, pred) %>% summarise(count = n()) %>% spread(pred, count, fill = 0)
-  votes$vote <- names(votes)[apply(votes[, -1], 1, which.max) + 1]
-  votes <- inner_join(votes, data.frame(row = rownames(newdata), idx = 1:nrow(newdata)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
-
+  if(object$type == "classification") {
+    #votes
+    votes <- preds %>% group_by(row, pred) %>% summarise(count = n()) %>% spread(pred, count, fill = 0)
+    votes$vote <- names(votes)[apply(votes[, -1], 1, which.max) + 1]
+    votes <- inner_join(votes, data.frame(row = rownames(newdata), idx = 1:nrow(newdata)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
+  } else {
+    #TODO: stupid name convention, consider changing for regression
+    votes <- preds %>% group_by(row) %>% summarise(vote = mean(pred))
+    votes <- inner_join(votes, data.frame(row = rownames(newdata), idx = 1:nrow(newdata)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
+  }
   return(list(response = votes$vote, vote = votes))
 }
 
