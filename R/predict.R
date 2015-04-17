@@ -54,6 +54,7 @@ predict.forest_tree <- function(object, newdata, ...) {
   newdata$idx <- 1:nrow(newdata)
   rules <- unlist(lapply(object$path[rownames(object$frame)[object$frame$var == "<leaf>"]], function(x) paste(x[-1], collapse = " & ")))
   split <- lapply(1:length(rules), function(x) data.frame(idx = newdata[eval(parse(text = rules[x]), envir = newdata), "idx"]))
+  if(nrow(object$frame) == 1) split <- list(newdata)
   names(split) <- object$frame[object$frame$var == "<leaf>", "yval"]
 
 #   do.call(rbind, split) -> pred
