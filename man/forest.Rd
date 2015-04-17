@@ -21,7 +21,7 @@ the tree during building the random forest}
 \item{...}{extra parameters to pass to rpart}
 }
 \value{
-A. object of class \code{forestr} with components
+An object of class \code{forestr} with components
   \item{call}{the original call to \code{forest}}
   \item{type}{one of \code{regression} or \code{classification}}
   \item{predicted}{the predicted values of the input data based on out of bag samples}

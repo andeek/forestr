@@ -15,7 +15,9 @@
 \item{...}{not currently used}
 }
 \value{
-currently nothing
+A list with the following components
+   \item{response}{the predicted classes or values for each observation}
+   \item{votes}{if \code{object$type} is classification, the vote matrix used to create the prediction}
 }
 \description{
 Predict methods to predict from forestr tree and random forest

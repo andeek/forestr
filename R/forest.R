@@ -11,7 +11,7 @@
 #' @param min_size minimum size of a terminal node
 #' @param ... extra parameters to pass to rpart
 #'
-#' @return A. object of class \code{forestr} with components
+#' @return An object of class \code{forestr} with components
 #'   \item{call}{the original call to \code{forest}}
 #'   \item{type}{one of \code{regression} or \code{classification}}
 #'   \item{predicted}{the predicted values of the input data based on out of bag samples}
@@ -76,7 +76,7 @@ forest <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
 
 
 
-  #TODO predict forest, importance
+  #TODO importance, proximity, fix for regression. currently only predicting things for classification
   #TODO make summary/print functions
 
   res <- list(call = match.call(), type = type, votes = votes, oob = oob_error)

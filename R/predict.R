@@ -7,7 +7,9 @@
 #' @param newdata dataframe containing new data
 #' @param ... not currently used
 #'
-#' @return currently nothing
+#' @return A list with the following components
+#'    \item{response}{the predicted classes or values for each observation}
+#'    \item{votes}{if \code{object$type} is classification, the vote matrix used to create the prediction}
 #'
 #' @examples
 #'
@@ -23,7 +25,21 @@
 #'
 #' @export
 predict.forestr <- function(object, newdata, ...) {
+  y <-  eval(parse(text = as.character(as.formula(as.character(object$call[2])))[2]), envir = newdata)
+  #predict for each tree
+  object$raw_results %>%
+    ungroup() %>%
+    group_by(b) %>%
+    do(pred = data.frame(pred = predict(.$rf[[1]], newdata), true = y, row = rownames(newdata))) -> preds
 
+  preds <- do.call(rbind, preds$pred)
+
+  #votes
+  votes <- preds %>% group_by(row, pred) %>% summarise(count = n()) %>% spread(pred, count, fill = 0)
+  votes$vote <- names(votes)[apply(votes[, -1], 1, which.max) + 1]
+  votes <- inner_join(votes, data.frame(row = rownames(newdata), idx = 1:nrow(newdata)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
+
+  return(list(response = votes$vote, vote = votes))
 }
 
 
