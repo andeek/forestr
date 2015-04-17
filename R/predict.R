@@ -1,4 +1,4 @@
-#' Predict
+#' Predict Method for forestr objects
 #'
 #' Predict methods to predict from forestr tree and random forest
 #' within forestr using the \code{predict} function
@@ -56,14 +56,6 @@ predict.forest_tree <- function(object, newdata, ...) {
   split <- lapply(1:length(rules), function(x) data.frame(idx = newdata[eval(parse(text = rules[x]), envir = newdata), "idx"]))
   if(nrow(object$frame) == 1) split <- list(newdata)
   names(split) <- object$frame[object$frame$var == "<leaf>", "yval"]
-
-#   do.call(rbind, split) -> pred
-#   pred %>%
-#     mutate(yvals = substr(rownames(pred), 1, 1)) %>%
-#     arrange(idx) %>%
-#     select(yvals) %>%
-#     unlist(use.names = FALSE) %>% as.numeric -> pred
-#   object$ylevels[pred]
 
   do.call(rbind, lapply(1:length(split), function(x) split[[x]] %>% mutate(yval = names(split)[x]))) %>%
     arrange(idx) %>%

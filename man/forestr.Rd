@@ -3,7 +3,7 @@
 \name{forestr}
 \alias{forestr}
 \alias{print.forestr}
-\title{forestr}
+\title{Classification and Regression with Random Forest and Choice of Splitting Function}
 \usage{
 forestr(formula, data, mvars = NULL, B = 500, min_size = NULL, ...)
 

@@ -1,4 +1,4 @@
-#' forestr
+#' Classification and Regression with Random Forest and Choice of Splitting Function
 #'
 #' Runs a random forest with user specified splitting criteria
 #' using the \code{forestr} function.
@@ -80,7 +80,6 @@ forestr <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
   oob_error <- mean(loss(votes$value, y))
 
   #TODO importance, proximity
-  #TODO make summary function
 
   res <- list(call = match.call(), type = type, votes = votes, oob = oob_error)
   if(type == "classification") res$misclass <- misclass_table

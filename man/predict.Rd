@@ -3,7 +3,7 @@
 \name{predict}
 \alias{predict}
 \alias{predict.forestr}
-\title{Predict}
+\title{Predict Method for forestr objects}
 \usage{
 \method{predict}{forestr}(object, newdata, ...)
 }
