@@ -13,8 +13,8 @@
 #'
 #' @examples
 #'
-#' mtcars.forest <- forestr(factor(cyl) ~ ., data = mtcars[1:25, ])
-#' predict(mtcars.forest, mtcars[26:32, ])
+#' mtcars.forestr <- forestr(factor(cyl) ~ ., data = mtcars[1:25, ])
+#' predict(mtcars.forestr, mtcars[26:32, ])
 #'
 #' @name predict
 
@@ -30,9 +30,9 @@ predict.forestr <- function(object, newdata, ...) {
   object$raw_results %>%
     ungroup() %>%
     group_by(b) %>%
-    do(pred = data.frame(pred = predict(.$rf[[1]], newdata), true = y, row = rownames(newdata))) -> preds
+    do(pred = data.frame(pred = predict(.$rf[[1]], newdata), true = y, row = rownames(newdata))) -> raw_preds
 
-  preds <- do.call(rbind, preds$pred)
+  preds <- do.call(rbind, raw_preds$pred)
 
   if(object$type == "classification") {
     #votes
@@ -44,7 +44,7 @@ predict.forestr <- function(object, newdata, ...) {
     votes <- preds %>% group_by(row) %>% summarise(value = mean(pred))
     votes <- inner_join(votes, data.frame(row = rownames(newdata), idx = 1:nrow(newdata)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
   }
-  return(list(response = votes$value, vote = votes))
+  return(list(response = votes$value, vote = votes, raw_preds = raw_preds))
 }
 
 

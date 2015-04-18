@@ -24,7 +24,7 @@ Predict methods to predict from forestr tree and random forest
 within forestr using the \code{predict} function
 }
 \examples{
-mtcars.forest <- forestr(factor(cyl) ~ ., data = mtcars[1:25, ])
-predict(mtcars.forest, mtcars[26:32, ])
+mtcars.forestr <- forestr(factor(cyl) ~ ., data = mtcars[1:25, ])
+predict(mtcars.forestr, mtcars[26:32, ])
 }
 
