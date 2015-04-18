@@ -79,7 +79,7 @@ forestr <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
   }
   oob_error <- mean(loss(votes$value, y))
 
-  #TODO importance, proximity
+  #TODO importance
 
   res <- list(call = match.call(), type = type, votes = votes, oob = oob_error, data = data)
   if(type == "classification") res$misclass <- misclass_table

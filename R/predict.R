@@ -58,7 +58,7 @@ predict.forest_tree <- function(object, newdata, ...) {
   names(split) <- paste(object$frame[object$frame$var == "<leaf>", "yval"], rownames(object$frame[object$frame$var == "<leaf>",]), sep = "_")
 
   do.call(rbind, lapply(1:length(split), function(x) split[[x]] %>% mutate(yval = names(split)[x]))) %>%
-    separate(yval, into = c("yval", "node"), by = "_") %>%
+    separate(yval, into = c("yval", "node"), sep = "_") %>%
     mutate(yval = as.numeric(yval), node = as.numeric(node)) %>%
     arrange(idx) %>%
     select(-idx) %>% as.list() -> pred
