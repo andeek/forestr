@@ -22,17 +22,17 @@
 #' @rdname predict
 #'
 #' @import dplyr
+#' @importFrom tidyr separate
 #'
 #' @export
 predict.forestr <- function(object, newdata, ...) {
   y <-  eval(parse(text = as.character(as.formula(as.character(object$call[2])))[2]), envir = newdata)
   #predict for each tree
-  object$raw_results %>%
-    ungroup() %>%
-    group_by(b) %>%
-    do(pred = data.frame(pred = predict(.$rf[[1]], newdata), true = y, row = rownames(newdata))) -> raw_preds
-
-  preds <- do.call(rbind, raw_preds$pred)
+  raw_preds <- lapply(object$tree, function(x) {
+    tmp <- predict(x, newdata)
+    data.frame(pred = tmp$yval, true = y, row = as.character(rownames(newdata)), where = tmp$node)
+  })
+  preds <- do.call(rbind, raw_preds)
 
   if(object$type == "classification") {
     #votes
@@ -55,13 +55,15 @@ predict.forest_tree <- function(object, newdata, ...) {
   rules <- unlist(lapply(object$path[rownames(object$frame)[object$frame$var == "<leaf>"]], function(x) paste(x[-1], collapse = " & ")))
   split <- lapply(1:length(rules), function(x) data.frame(idx = newdata[eval(parse(text = rules[x]), envir = newdata), "idx"]))
   if(nrow(object$frame) == 1) split <- list(newdata)
-  names(split) <- object$frame[object$frame$var == "<leaf>", "yval"]
+  names(split) <- paste(object$frame[object$frame$var == "<leaf>", "yval"], rownames(object$frame[object$frame$var == "<leaf>",]), sep = "_")
 
   do.call(rbind, lapply(1:length(split), function(x) split[[x]] %>% mutate(yval = names(split)[x]))) %>%
+    separate(yval, into = c("yval", "node"), by = "_") %>%
+    mutate(yval = as.numeric(yval), node = as.numeric(node)) %>%
     arrange(idx) %>%
-    select(yval) %>% data.matrix() %>% as.numeric() -> pred
+    select(-idx) %>% as.list() -> pred
 
-  if(object$type == "classification") object$ylevels[pred] else pred
+  if(object$type == "classification") list(yval = object$ylevels[pred$yval], node = pred$node) else pred
 }
 
 

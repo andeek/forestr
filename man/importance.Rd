@@ -18,7 +18,7 @@ A data frame with the variable importance.
 Diagnostic methods for \code{forestr} to compute the importance for each variable
 }
 \examples{
-mtcars.forestr <- forestr(factor(cyl) ~ ., data = mtcars[1:25, ])
+mtcars.forestr <- forestr(factor(cyl) ~ ., data = mtcars)
 importance(mtcars.forestr)
 }
 

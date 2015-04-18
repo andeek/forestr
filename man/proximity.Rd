@@ -18,7 +18,7 @@ A data frame with the proximity values.
 Diagnostic methods for \code{forestr} to compute the proximity matrix
 }
 \examples{
-mtcars.forestr <- forestr(factor(cyl) ~ ., data = mtcars[1:25, ])
+mtcars.forestr <- forestr(factor(cyl) ~ ., data = mtcars)
 proximity(mtcars.forestr)
 }
 

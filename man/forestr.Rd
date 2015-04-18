@@ -32,7 +32,7 @@ An object of class \code{forestr} with components
   \item{importance}{mean decrease in accurace over all classes for each variable in the model}
   \item{votes}{matrix giving the votes for each class on each observation (classification)}
   \item{oob}{out of bag error for the model including confusion matrix (classification)}
-  \item{raw_results}{data frame with sampled data, random forest tree objects, and predicted values}
+  \item{trees}{random forest tree objects}
 }
 \description{
 Runs a random forest with user specified splitting criteria

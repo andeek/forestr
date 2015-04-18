@@ -19,7 +19,7 @@
 #'   \item{importance}{mean decrease in accurace over all classes for each variable in the model}
 #'   \item{votes}{matrix giving the votes for each class on each observation (classification)}
 #'   \item{oob}{out of bag error for the model including confusion matrix (classification)}
-#'   \item{raw_results}{data frame with sampled data, random forest tree objects, and predicted values}
+#'   \item{trees}{random forest tree objects}
 #'
 #' @examples
 #'
@@ -60,7 +60,7 @@ forestr <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
   results %>%
     ungroup() %>%
     group_by(b) %>%
-    do(pred = data.frame(pred = predict(.$rf[[1]], data[-unique(.$sample[[1]][, "idx"]), ]), true = y[-unique(.$sample[[1]][, "idx"])])) %>%
+    do(pred = data.frame(pred = predict(.$rf[[1]], data[-unique(.$sample[[1]][, "idx"]), ])$yval, true = y[-unique(.$sample[[1]][, "idx"])])) %>%
     right_join(results, by = "b") -> results
 
   data.frame(row = do.call(c, lapply(results$sample, function(x) rownames(data)[(1:nrow(data))[-unique(x$idx)]])),
@@ -83,7 +83,7 @@ forestr <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
 
   res <- list(call = match.call(), type = type, votes = votes, oob = oob_error, data = data)
   if(type == "classification") res$misclass <- misclass_table
-  res$raw_results <- results
+  res$trees <- results$rf
   res$B <- B
   res$mvars <- mvars
   class(res) <- "forestr"
