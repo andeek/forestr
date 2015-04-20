@@ -8,6 +8,10 @@ Just as a forester uses many tools to manage a forest, we may need multiple tool
 - One-Sided extreme
 - One-Sided purity
 
+# Installation
+
+To install `forestr`, use the command `devtools::install_github("andeek/forestr")`
+
 # Plan of Action
 
 This is a project for STAT 503 with Di Cook in Spring 2015. Below I detail the steps that will be taken to create this package and test its use.
