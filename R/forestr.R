@@ -34,7 +34,7 @@
 #' @importFrom tidyr spread
 #'
 #' @export
-forestr <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
+forestr <- function(formula, data, mvars, B = 500, min_size, method, ...){
 
   y <-  eval(parse(text = as.character(formula)[2]), envir = data)
   #TODO: error check parameters
@@ -42,8 +42,8 @@ forestr <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
 
   #default vals
   type <- ifelse(class(y) %in% c("factor", "character"), "classification", "regression")
-  if(is.null(mvars)) mvars <- if(!is.null(y) & !is.factor(y)) max(floor((ncol(data) - 1)/3), 1) else floor(sqrt(ncol(data) - 1))
-  if(is.null(min_size)) min_size = if (!is.null(y) && !is.factor(y)) 5 else 1
+  if(missing(mvars)) mvars <- if(!is.null(y) & !is.factor(y)) max(floor((ncol(data) - 1)/3), 1) else floor(sqrt(ncol(data) - 1))
+  if(missing(min_size)) min_size = if (!is.null(y) && !is.factor(y)) 5 else 1
 
   safe_grow <- failwith(NULL, grow_forest, quiet = TRUE)
 
@@ -51,11 +51,29 @@ forestr <- function(formula, data, mvars = NULL, B = 500, min_size = NULL, ...){
     group_by(b) %>%
     do(sample = draw_boot_sample(data)) -> results
 
-  results %>%
-    ungroup() %>%
-    group_by(b) %>%
-    do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type)) %>%
-    right_join(results, by = "b") -> results
+  if(missing(method)) {
+    results %>%
+      ungroup() %>%
+      group_by(b) %>%
+      do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type)) %>%
+      right_join(results, by = "b") -> results
+  } else {
+    if(method == "extremes") {
+      if(type == "regression") {
+        method <- list(eval = regession_extremes_eval, split = regession_extremes_split, init = regession_extremes_init)
+      } else {
+        method <- list(eval = classification_extremes_eval, split = classification_extremes_split, init = classification_extremes_init)
+      }
+      results %>%
+        ungroup() %>%
+        group_by(b) %>%
+        do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type, method = method)) %>%
+        right_join(results, by = "b") -> results
+    } else {
+      stop("Only extra splitting method implemented in forestr is one sided extremes.")
+    }
+  }
+
 
   results %>%
     ungroup() %>%

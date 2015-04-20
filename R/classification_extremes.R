@@ -167,13 +167,13 @@ classification_extremes_eval <- function(y, wt, parms) {
   y <- as.factor(y)
   y.labels <- levels(y)
   y.tab <- table(y)
-  class <- y.labels[which.max(y.tab)]
+  class <- as.numeric(y.labels[which.max(y.tab)])
   dev <- sum(wt*(y != class)) #weighted?
 
   list(label = class, deviance = dev)
 }
 
-classification_extremes <- function(y, wt, x, parms, continuous) {
+classification_extremes_split <- function(y, wt, x, parms, continuous) {
   n <- length(y)
   no.classes <- length(table(y))
   class.labs <- as.numeric(names(table((y))))

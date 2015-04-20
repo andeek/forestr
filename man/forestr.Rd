@@ -5,7 +5,7 @@
 \alias{print.forestr}
 \title{Classification and Regression with Random Forest and Choice of Splitting Function}
 \usage{
-forestr(formula, data, mvars = NULL, B = 500, min_size = NULL, ...)
+forestr(formula, data, mvars, B = 500, min_size, method, ...)
 
 \method{print}{forestr}(x, ...)
 }

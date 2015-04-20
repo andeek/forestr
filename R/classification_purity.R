@@ -120,6 +120,6 @@ classification_purity_eval <- function(y, wt, parms) {
   list(label = class, deviance = dev)
 }
 
-classification_purity <- function(y, wt, x, parms, continuous) {
+classification_purity_split <- function(y, wt, x, parms, continuous) {
   #TODO
 }
