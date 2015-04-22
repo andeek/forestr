@@ -10,7 +10,11 @@ Just as a forester uses many tools to manage a forest, we may need multiple tool
 
 # Installation
 
-To install `forestr`, use the command `devtools::install_github("andeek/forestr")`
+To install `forestr`, 
+
+1. if necessary, install devtools `install.packages("devtools")`,
+1. use the command `devtools::install_github("andeek/forestr")`,
+2. and install an altered version of `rpart` with splitting functions by `devtools::install_github("andeek/rpart")`.
 
 # Plan of Action
 
