@@ -34,7 +34,7 @@
 #' @importFrom tidyr spread
 #'
 #' @export
-forestr <- function(formula, data, mvars, B = 500, min_size, method, ...){
+forestr <- function(formula, data, mvars, B = 500, min_size, ...){
 
   y <-  eval(parse(text = as.character(formula)[2]), envir = data)
   #TODO: error check parameters
@@ -43,36 +43,42 @@ forestr <- function(formula, data, mvars, B = 500, min_size, method, ...){
   #default vals
   type <- ifelse(class(y) %in% c("factor", "character"), "classification", "regression")
   if(missing(mvars)) mvars <- if(!is.null(y) & !is.factor(y)) max(floor((ncol(data) - 1)/3), 1) else floor(sqrt(ncol(data) - 1))
-  if(missing(min_size)) min_size = if (!is.null(y) && !is.factor(y)) 5 else 1
+  if(missing(min_size)) min_size <- if (!is.null(y) && !is.factor(y)) 5 else 1
 
-  safe_grow <- failwith(NULL, grow_forest, quiet = TRUE)
+  safe_grow <- failwith(NULL, grow_forest, quiet = FALSE)
 
   data.frame(b = 1:B) %>%
     group_by(b) %>%
     do(sample = draw_boot_sample(data)) -> results
 
-  if(missing(method)) {
+  results %>%
+    ungroup() %>%
+    group_by(b) %>%
+    do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type, method = "extremes", parms = list(classOfInterest = "1"))) %>%
+    right_join(results, by = "b") -> results
+
+  #if(missing(method)) {
     results %>%
       ungroup() %>%
       group_by(b) %>%
-      do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type)) %>%
+      do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type, ...)) %>%
       right_join(results, by = "b") -> results
-  } else {
-    if(method == "extremes") {
-      if(type == "regression") {
-        method <- list(eval = regession_extremes_eval, split = regession_extremes_split, init = regession_extremes_init)
-      } else {
-        method <- list(eval = classification_extremes_eval, split = classification_extremes_split, init = classification_extremes_init)
-      }
-      results %>%
-        ungroup() %>%
-        group_by(b) %>%
-        do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type, method = method)) %>%
-        right_join(results, by = "b") -> results
-    } else {
-      stop("Only extra splitting method implemented in forestr is one sided extremes.")
-    }
-  }
+#   } else {
+#     if(method == "extremes") {
+#       if(type == "regression") {
+#         method <- list(eval = regession_extremes_eval, split = regession_extremes_split, init = regession_extremes_init)
+#       } else {
+#         method <- list(eval = classification_extremes_eval, split = classification_extremes_split, init = classification_extremes_init)
+#       }
+#       results %>%
+#         ungroup() %>%
+#         group_by(b) %>%
+#         do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type, method = method)) %>%
+#         right_join(results, by = "b") -> results
+#     } else {
+#       stop("Only extra splitting method implemented in forestr is one sided extremes.")
+#     }
+#  }
 
 
   results %>%
@@ -96,8 +102,6 @@ forestr <- function(formula, data, mvars, B = 500, min_size, method, ...){
     votes <- inner_join(votes, data.frame(row = rownames(data), idx = 1:nrow(data)), by = "row") %>% arrange(idx) %>% select(-idx) #reordering by original
   }
   oob_error <- mean(loss(votes$value, y))
-
-  #TODO importance
 
   res <- list(call = match.call(), type = type, votes = votes, oob = oob_error, data = data)
   if(type == "classification") res$misclass <- misclass_table
@@ -192,7 +196,7 @@ plant_tree <- function(formula, data_star_b, mvars, min_size, ...) {
   #function to be used recursively to grow the forest
   #split at current node with random variables (only 1 level deep)
   new_formula <- select_mvars(formula, data_star_b, mvars)
-  stub <- rpart(new_formula, data_star_b, control = rpart.control(maxdepth = 1, minbucket = min_size)) #TODO change splitting mechanism
+  stub <- rpart(new_formula, data_star_b, control = rpart.control(maxdepth = 1, minbucket = min_size), ...) #TODO change splitting mechanism
   return(stub)
 }
 
