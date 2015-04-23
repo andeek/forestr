@@ -19,7 +19,7 @@ names(labels_higgs_test) <- "class"
 
 # create samples of varying unbalancedness
 set.seed(503503) #reproducible samples
-n <- 1e4
+n <- 1e3
 p <- c(.01, .02, .05, .1)
 
 higgs_1 <- higgs_1M %>%
@@ -79,4 +79,4 @@ test_higgs_10 <- higgs_test %>%
           filter(class == 1) %>%
           sample_n(n*(p[4])/2))
 
-devtools::use_data(higgs_1, higgs_2, higgs_5, higgs_10, test_higgs_1, test_higgs_2, test_higgs_5, test_higgs_10)
+devtools::use_data(higgs_1, higgs_2, higgs_5, higgs_10, test_higgs_1, test_higgs_2, test_higgs_5, test_higgs_10, overwrite = TRUE)

@@ -145,7 +145,7 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, type, type2, ...)
         max_node <- max(max_node, max(node_names))
 
         #if(length(locs[locs == as.numeric(rownames(frame)[idx[i]])]) != length(splits$locs[[i]])) return(list(locs = locs, frame = frame, splits = splits, path = path, idx = idx))
-        locs[locs == as.numeric(rownames(frame)[idx[i]])] <- node_names[splits$locs[[i]]]
+        locs[locs == as.numeric(splits$node[i])] <- node_names[splits$locs[[i]]]
 
         inserts <- cbind(matrix(rep(path[splits$node[[i]]][[1]], length(splits$path[[i]])), nrow = length(splits$path[[i]]), byrow = TRUE),
                          do.call(rbind, splits$path[[i]])[, -1])

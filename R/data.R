@@ -1,4 +1,4 @@
-#' 10,000 Simulated particles to emulate Higgs boson discovery
+#' 1,000 Simulated particles to emulate Higgs boson discovery
 #'
 #' A dataset containing simulated data produced using Monte Carlo
 #' to resemble properties measured by particle detectors in an accelerator
@@ -10,7 +10,7 @@
 #' @name higgs_1
 #' @usage data(higgs_1)
 #'
-#' @format A data frame with 10000 rows and 29 variables:
+#' @format A data frame with 1000 rows and 29 variables:
 #' \describe{
 #'    \item{class}{presence of Higgs boson particle, 1 for signal, 0 for background}
 #'    \item{lepton_pT}{low- }
@@ -45,7 +45,7 @@
 #' @source \url{https://archive.ics.uci.edu/ml/datasets/HIGGS}
 NULL
 
-#' 10,000 Simulated particles to emulate Higgs boson discovery
+#' 1,000 Simulated particles to emulate Higgs boson discovery
 #'
 #' A dataset containing simulated data produced using Monte Carlo
 #' to resemble properties measured by particle detectors in an accelerator
@@ -57,7 +57,7 @@ NULL
 #' @name higgs_2
 #' @usage data(higgs_2)
 #'
-#' @format A data frame with 10000 rows and 29 variables:
+#' @format A data frame with 1000 rows and 29 variables:
 #' \describe{
 #'    \item{class}{presence of Higgs boson particle, 1 for signal, 0 for background}
 #'    \item{lepton_pT}{low- }
@@ -92,7 +92,7 @@ NULL
 #' @source \url{https://archive.ics.uci.edu/ml/datasets/HIGGS}
 NULL
 
-#' 10,000 Simulated particles to emulate Higgs boson discovery
+#' 1,000 Simulated particles to emulate Higgs boson discovery
 #'
 #' A dataset containing simulated data produced using Monte Carlo
 #' to resemble properties measured by particle detectors in an accelerator
@@ -104,7 +104,7 @@ NULL
 #' @name higgs_5
 #' @usage data(higgs_5)
 #'
-#' @format A data frame with 10000 rows and 29 variables:
+#' @format A data frame with 1000 rows and 29 variables:
 #' \describe{
 #'    \item{class}{presence of Higgs boson particle, 1 for signal, 0 for background}
 #'    \item{lepton_pT}{low- }
@@ -139,7 +139,7 @@ NULL
 #' @source \url{https://archive.ics.uci.edu/ml/datasets/HIGGS}
 NULL
 
-#' 10,000 Simulated particles to emulate Higgs boson discovery
+#' 1,000 Simulated particles to emulate Higgs boson discovery
 #'
 #' A dataset containing simulated data produced using Monte Carlo
 #' to resemble properties measured by particle detectors in an accelerator
@@ -150,7 +150,7 @@ NULL
 #' @keywords datasets
 #' @name higgs_10
 #' @usage data(higgs_10)
-#' @format A data frame with 10000 rows and 29 variables:
+#' @format A data frame with 1000 rows and 29 variables:
 #' \describe{
 #'    \item{class}{presence of Higgs boson particle, 1 for signal, 0 for background}
 #'    \item{lepton_pT}{low- }
