@@ -7,7 +7,9 @@ Description: Classification and regression based on a forest of trees
 Depends: R (>= 3.1.3)
 License: GPL-3
 LazyData: true
-Imports:
+Imports: 
     dplyr,
     rpart,
     tidyr
+Suggests: knitr
+VignetteBuilder: knitr

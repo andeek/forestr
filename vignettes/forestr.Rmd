@@ -1,0 +1,38 @@
+---
+title: "Choose your own splitting criteria"
+subtitle: "An adventure with random forests"
+author: "Andee Kaplan"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    fig_caption: true
+bibliography: biblio.bib
+vignette: >
+  %\VignetteIndexEntry{Choose your own splitting criteria}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+#Background
+
+The random forest [@breiman2001random] is an ensemble method that combines bagged (bootstap aggregated) classification and regression trees with a random variable selection at each node in the tree. This methodology is implemented in `R` [@R] in the `randomForest` package [@randomForest]. The random forest methodology is a general framework for building a model by combining trees, however its implementation is very specific. Within the `randomForest` package, a Gini splitting criteria is used as the only possible splitting mechanism within the trees.
+
+The `forestr` [@forestr] implements the random forest methodology with a choice of splitting criteria, namely:
+
+  - Gini,
+  - Information,
+  - One-sided Extremes, and
+  - One-sided Purity.
+  
+The last two splitting criteria are introduced by Buja and Lee [-@buja2001data] as a means to "identify pure or extreme buckets" in the data.
+
+#Why
+
+You may think to yourself, "Why would I need this? The `randomForest` package works well and is blazing fast!" I would agree. If Gini is your splitting criteria of choice and your data are fairly balanced, then I would recommend using `randomForest`. If, however, your data is not evenly spread across the classification buckets or there is a particular class of data that you care more about classifying correctly (especially if it is a small minority of cases), then you may turn to a one-sided extremes or one-sided purity splitting function. This is the case often with detection problems, for example cancer detection in pations or detection of the Higgs particle from measurements by particle detectors in an accelerator.
+
+#Higgs Example
+
+
+#Implementation
+
+#References

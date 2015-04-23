@@ -2,7 +2,7 @@ library(RCurl)
 library(dplyr)
 
 # data from https://github.com/ledell/h2oEnsemble-benchmarks
-# c subset of the original HIGGS.csv file
+# subset of the original HIGGS.csv file
 higgs_1M <- getURL("https://s3.amazonaws.com/uciml-higgs/higgs_1M.csv")
 
 # last 500k observations of HIGGS.csv are the test set.
@@ -50,6 +50,13 @@ higgs_10 <- higgs_1M %>%
           filter(class == 1) %>%
           sample_n(n*(p[4])))
 
+higgs_25 <- higgs_1M %>%
+  filter(class == 0) %>%
+  sample_n(n*(1-p[4])) %>%
+  rbind(higgs_1M %>%
+          filter(class == 1) %>%
+          sample_n(n*(p[4])))
+
 
 test_higgs_1 <- higgs_test %>%
   filter(class == 0) %>%
@@ -79,4 +86,11 @@ test_higgs_10 <- higgs_test %>%
           filter(class == 1) %>%
           sample_n(n*(p[4])/2))
 
-devtools::use_data(higgs_1, higgs_2, higgs_5, higgs_10, test_higgs_1, test_higgs_2, test_higgs_5, test_higgs_10, overwrite = TRUE)
+test_higgs_25 <- higgs_test %>%
+  filter(class == 0) %>%
+  sample_n(n*(1-p[4])/2) %>%
+  rbind(higgs_test %>%
+          filter(class == 1) %>%
+          sample_n(n*(p[4])/2))
+
+devtools::use_data(higgs_1, higgs_2, higgs_5, higgs_10, higgs_25, test_higgs_1, test_higgs_2, test_higgs_5, test_higgs_10, test_higgs_25, overwrite = TRUE)

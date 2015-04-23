@@ -4,22 +4,18 @@
 
 # Example code in package build process
 *-Ex.R
-
 # RStudio files
 .Rproj.user/
 forestr.Rproj
-
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
 .Rproj.user
-
 # big raw data
 data-raw/*.csv
-
 #mac stuff
 .DS_Store
-
 #compiled stuff
 *.o
 *.so
+inst/doc
