@@ -14,7 +14,7 @@ To install `forestr`,
 
 1. if necessary, install devtools `install.packages("devtools")`,
 1. use the command `devtools::install_github("andeek/forestr")`,
-2. and install an altered version of `rpart` with splitting functions by `devtools::install_github("andeek/rpart")`.
+2. and install an altered version of `rpart` with splitting functions by `devtools::install_github("andeek/rpartee")`.
 
 # Plan of Action
 
