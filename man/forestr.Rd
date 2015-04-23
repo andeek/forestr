@@ -22,6 +22,8 @@ the tree during building the random forest}
 
 \item{min_size}{minimum size of a terminal node}
 
+\item{method}{optional splitting method, currently \code{"extremes"} and \code{"purity"} implemented.}
+
 \item{...}{extra parameters to pass to rpart}
 }
 \value{

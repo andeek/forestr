@@ -10,6 +10,7 @@
 #' @param mvars number of variables to sample in each node of
 #'        the tree during building the random forest
 #' @param min_size minimum size of a terminal node
+#' @param method optional splitting method, currently \code{"extremes"} and \code{"purity"} implemented.
 #' @param ... extra parameters to pass to rpart
 #'
 #' @return An object of class \code{forestr} with components
@@ -34,7 +35,7 @@
 #' @importFrom tidyr spread
 #'
 #' @export
-forestr <- function(formula, data, mvars, B = 500, min_size, ...){
+forestr <- function(formula, data, mvars, B = 500, min_size, method, ...){
 
   y <-  eval(parse(text = as.character(formula)[2]), envir = data)
   #TODO: error check parameters
@@ -42,43 +43,30 @@ forestr <- function(formula, data, mvars, B = 500, min_size, ...){
 
   #default vals
   type <- ifelse(class(y) %in% c("factor", "character"), "classification", "regression")
+  type2 <- NULL
+  if(!missing(method)) if(method %in% c("extremes", "purity")) type2 <- method
   if(missing(mvars)) mvars <- if(!is.null(y) & !is.factor(y)) max(floor((ncol(data) - 1)/3), 1) else floor(sqrt(ncol(data) - 1))
   if(missing(min_size)) min_size <- if (!is.null(y) && !is.factor(y)) 5 else 1
 
-  safe_grow <- failwith(NULL, grow_forest, quiet = FALSE)
+  safe_grow <- failwith(NULL, grow_forest, quiet = TRUE)
 
   data.frame(b = 1:B) %>%
     group_by(b) %>%
     do(sample = draw_boot_sample(data)) -> results
 
-  results %>%
-    ungroup() %>%
-    group_by(b) %>%
-    do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type, method = "extremes", parms = list(classOfInterest = "1"))) %>%
-    right_join(results, by = "b") -> results
-
-  #if(missing(method)) {
+  if(missing(method)) {
     results %>%
       ungroup() %>%
       group_by(b) %>%
-      do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type, ...)) %>%
+      do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type, type2 = type2, ...)) %>%
       right_join(results, by = "b") -> results
-#   } else {
-#     if(method == "extremes") {
-#       if(type == "regression") {
-#         method <- list(eval = regession_extremes_eval, split = regession_extremes_split, init = regession_extremes_init)
-#       } else {
-#         method <- list(eval = classification_extremes_eval, split = classification_extremes_split, init = classification_extremes_init)
-#       }
-#       results %>%
-#         ungroup() %>%
-#         group_by(b) %>%
-#         do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type, method = method)) %>%
-#         right_join(results, by = "b") -> results
-#     } else {
-#       stop("Only extra splitting method implemented in forestr is one sided extremes.")
-#     }
-#  }
+  } else {
+    results %>%
+      ungroup() %>%
+      group_by(b) %>%
+      do(rf = safe_grow(formula = formula, data_star_b = .$sample[[1]] %>% select(-idx), mvars = mvars, min_size = min_size, type = type, type2 = type2, method = method, ...)) %>%
+      right_join(results, by = "b") -> results
+  }
 
 
   results %>%
@@ -103,7 +91,7 @@ forestr <- function(formula, data, mvars, B = 500, min_size, ...){
   }
   oob_error <- mean(loss(votes$value, y))
 
-  res <- list(call = match.call(), type = type, votes = votes, oob = oob_error, data = data)
+  res <- list(call = match.call(), type = type, type2 = type2, votes = votes, oob = oob_error, data = data)
   if(type == "classification") res$misclass <- misclass_table
   res$trees <- results$rf
   res$B <- B
@@ -116,13 +104,14 @@ loss <- function(pred, y) {
   if(class(y) %in% c("factor", "character")) pred != y else (pred - y)^2
 }
 
-grow_forest <- function(formula, data_star_b, mvars, min_size, type, ...) {
+grow_forest <- function(formula, data_star_b, mvars, min_size, type, type2, ...) {
   #control function for planting trees
   tree <- plant_tree(formula, data_star_b, mvars, min_size, ...)
   frame <- tree$frame %>% select(var, n, wt, dev, yval)
   path <- path.rpart(tree, 1:nrow(frame), print.it = FALSE)
   locs <- tree$where
   idx <- which(frame$var == "<leaf>" & frame$n > min_size & frame$dev > 0)
+  if(length(type2) > 0) if(type2 == "extremes") idx <- which(frame$var == "<leaf>" & frame$n > min_size & abs(frame$dev) > 1e-10 & abs(frame$dev) < 1 - 1e-10) #extremes gives deviance of 1 if all not of interest, stop trying to split this...?
   ylevels <- attr(tree, "ylevels")
   split <- length(idx) > 0
   max_node <- max(as.numeric(names(path))) #store for unique naming
@@ -151,11 +140,11 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, type, ...) {
     if(nrow(splits) > 0) {
       #insert into frame/path where appropriate
       for(i in 1:nrow(splits)) {
-        #TODO: fix. this doesn't work, not sure when though... issues with length sometimes -> factor?
         node_names <- c(as.numeric(splits$node[i]), (nrow(splits$frame[[i]]) > 1) * (max_node + 1:(nrow(splits$frame[[i]]) - 1)))
         node_names <- node_names[node_names > 0]
         max_node <- max(max_node, max(node_names))
 
+        #if(length(locs[locs == as.numeric(rownames(frame)[idx[i]])]) != length(splits$locs[[i]])) return(list(locs = locs, frame = frame, splits = splits, path = path, idx = idx))
         locs[locs == as.numeric(rownames(frame)[idx[i]])] <- node_names[splits$locs[[i]]]
 
         inserts <- cbind(matrix(rep(path[splits$node[[i]]][[1]], length(splits$path[[i]])), nrow = length(splits$path[[i]]), byrow = TRUE),
@@ -179,6 +168,7 @@ grow_forest <- function(formula, data_star_b, mvars, min_size, type, ...) {
 
     #check if more nodes to split
     idx <- which(frame$var == "<leaf>" & frame$n > min_size & frame$dev > 0)
+    if(length(type2) > 0) if(type2 == "extremes") idx <- which(frame$var == "<leaf>" & frame$n > min_size & abs(frame$dev) > 1e-10 & abs(frame$dev) < 1 - 1e-10)
     max_node <- max(as.numeric(names(path))) #store for unique naming
     split <- length(idx) > 0
     #stop trying to split if unsuccessful after 3 times splitting the same variable
@@ -196,7 +186,7 @@ plant_tree <- function(formula, data_star_b, mvars, min_size, ...) {
   #function to be used recursively to grow the forest
   #split at current node with random variables (only 1 level deep)
   new_formula <- select_mvars(formula, data_star_b, mvars)
-  stub <- rpart(new_formula, data_star_b, control = rpart.control(maxdepth = 1, minbucket = min_size), ...) #TODO change splitting mechanism
+  stub <- rpart(new_formula, data_star_b, control = rpart.control(maxdepth = 1, minbucket = min_size), ...)
   return(stub)
 }
 
@@ -220,7 +210,7 @@ select_mvars <- function(formula, data_star_b, mvars) {
 #' @export
 print.forestr <- function(x, ...) {
   cat("\nCall:\n", deparse(x$call), "\n")
-  cat("               Type of random forest: ", x$type, "\n",
+  cat("               Type of random forest: ", paste(x$type, x$type2, sep = " - "), "\n",
       sep = "")
   cat("                     Number of trees: ", x$B, "\n",
       sep = "")
