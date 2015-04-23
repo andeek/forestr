@@ -9,7 +9,7 @@ License: GPL-3
 LazyData: true
 Imports:
     dplyr,
-    rpartee,
+    rpart,
     tidyr
 Suggests: knitr
 VignetteBuilder: knitr

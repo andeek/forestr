@@ -31,7 +31,7 @@
 #' @rdname forestr
 #'
 #' @import dplyr
-#' @import rpartee
+#' @import rpart
 #' @importFrom tidyr spread
 #'
 #' @export
