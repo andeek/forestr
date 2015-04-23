@@ -35,4 +35,26 @@ You may think to yourself, "Why would I need this? The `randomForest` package wo
 
 #Implementation
 
+The `forestr` package is written entirely in `R`and uses a modified `rpart` package [@rpart] to include the additional splitting criteria. The modified `rpart` can be found at http://github.com/andeek/rpart and installed using the command 
+
+```r
+devtools::install_github("andeek/rpart")
+```
+
+The modifications to `rpart` for the additional splitting functions were first introduced in the package `itree` [@itree], however this package was build on an old and slightly unstable version of `rpart`, making it unusable as is within the `forestr` framework. Fortunately, `rpart` allows for the addition of user defined splitting criterion using either `C` functions or `R` functions written by the user. The three functions a user must define are
+
+init
+
+:   The initialization function that initializes the parameters and data passed to the splitting function
+
+eval
+
+:   The evaluation function that creates a label for each node and evaluated the deviance at that node
+
+split
+    
+:   The splitting function is the workhorse function that actually attempts to find the split point for the data based on a variable
+
+As such, the modified `rpart` contains the additional functions provided from the `itree` package, but within the more stable current release of `rpart`, version 4.1-9.
+
 #References
