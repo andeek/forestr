@@ -28,12 +28,6 @@ set.seed(503503) #reproducible samples
 n <- 200
 p <- c(.02, .05, .1, .25)
 
-higgs_2 <- higgs_1M %>%
-  filter(class == "0") %>%
-  sample_n(n*(1-p[1])) %>%
-  rbind(higgs_1M %>%
-          filter(class == "1") %>%
-          sample_n(n*(p[1])))
 
 higgs_5 <- higgs_1M %>%
   filter(class == "0") %>%
@@ -56,14 +50,6 @@ higgs_25 <- higgs_1M %>%
           filter(class == "1") %>%
           sample_n(n*(p[4])))
 
-
-test_higgs_2 <- higgs_test %>%
-  filter(class == "0") %>%
-  sample_n(n*(1-p[1])) %>%
-  rbind(higgs_test %>%
-          filter(class == "1") %>%
-          sample_n(n*(p[1])))
-
 test_higgs_5 <- higgs_test %>%
   filter(class == "0") %>%
   sample_n(n*(1-p[2])) %>%
@@ -85,4 +71,4 @@ test_higgs_25 <- higgs_test %>%
           filter(class == "1") %>%
           sample_n(n*(p[4])))
 
-devtools::use_data(higgs_2, higgs_5, higgs_10, higgs_25, test_higgs_2, test_higgs_5, test_higgs_10, test_higgs_25, overwrite = TRUE)
+devtools::use_data(higgs_5, higgs_10, higgs_25, test_higgs_5, test_higgs_10, test_higgs_25, overwrite = TRUE)
