@@ -48,7 +48,7 @@ forestr <- function(formula, data, mvars, B = 500, min_size, method, ...){
   if(missing(mvars)) mvars <- if(!is.null(y) & !is.factor(y)) max(floor((ncol(data) - 1)/3), 1) else floor(sqrt(ncol(data) - 1))
   if(missing(min_size)) min_size <- if (!is.null(y) && !is.factor(y)) 5 else 1
 
-  safe_grow <- failwith(NULL, grow_forest, quiet = TRUE)
+  safe_grow <- failwith(NULL, grow_forest, quiet = FALSE)
 
   data.frame(b = 1:B) %>%
     group_by(b) %>%
