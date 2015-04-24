@@ -3,8 +3,8 @@
 \docType{data}
 \name{test_higgs_25}
 \alias{test_higgs_25}
-\title{(test) 5,000 Simulated particles to emulate Higgs boson discovery}
-\format{A data frame with 5000 rows and 29 variables:
+\title{(test) 250 Simulated particles to emulate Higgs boson discovery}
+\format{A data frame with 250 rows and 29 variables:
 \describe{
    \item{class}{presence of Higgs boson particle, 1 for signal, 0 for background}
    \item{lepton_pT}{low- }
