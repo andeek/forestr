@@ -19,3 +19,5 @@ data-raw/*.csv
 *.o
 *.so
 inst/doc
+
+vignettes/forestr_cache
