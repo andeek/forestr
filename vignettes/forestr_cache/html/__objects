@@ -1,0 +1,9 @@
+scatter	
+rf_25	rf_extr_25	rf_gini_25	rf_info_25
+rf_25_2	rf_puri_25
+rf_25_3	rf_extr.pred_25	rf_gini.pred_25	rf_info.pred_25
+rf_25_4	rf_puri.pred_25
+rf_25_tables	oob_table
+rf_25_tables_test	rf_extr.pred_25	rf_gini.pred_25	rf_info.pred_25	rf_puri.pred_25	test_table
+importance	rf_extr.imp_25	rf_gini.imp_25	rf_info.imp_25	rf_puri.imp_25
+importance-plot	importance	order
