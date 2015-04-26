@@ -56,8 +56,12 @@ install_github("andeek/forestr")
 
   - Monte Carlo simulations to resemble properties measured by particle detectors in an accelerator to detect the Higgs particle [@baldi2014searching]
   - 21 features that are kinematic properties measured by the particle detectors in the accelerator
-  - Attempt to predict the detection of the Higgs particle using a random forest with different splitting mechanisms for varying degrees of unbalancedness 
-  - Created small subsets, 200 observations, with desired unbalancedness levels (5%, 10%, and 25%)
+  - Attempt to predict the detection of the Higgs particle using a random forest with different splitting mechanisms for some degrees of unbalancedness 
+  - Created small subset, 200 observations, with desired unbalancedness level (25%)
+  
+<div class="notes">
+More unbalanced levels in the paper and as datasets within the package, but only have time to look at one today.
+</div>
   
 ##Features
 
@@ -95,7 +99,11 @@ rf_extr_25 <- forestr(class ~ ., data = higgs_25 %>% select(-starts_with("m_")),
                   method = "extremes", parm = list(classOfInterest = "1"))
 ```
 
-```{r rf_25_2}
+```{r puri_obj, echo=FALSE}
+load("cache/puri.rda")
+```
+
+```{r rf_25_2, eval=FALSE}
 rf_puri_25 <- forestr(class ~ ., data = higgs_25 %>% select(-starts_with("m_")), 
                       method = "purity")
 ```
@@ -107,7 +115,7 @@ rf_info.pred_25 <- predict(rf_info_25, test_higgs_25 %>% select(-starts_with("m_
 rf_extr.pred_25 <- predict(rf_extr_25, test_higgs_25 %>% select(-starts_with("m_")))
 ```
 
-```{r rf_25_4}
+```{r rf_25_4, eval=FALSE}
 rf_puri.pred_25 <- predict(rf_puri_25, test_higgs_25 %>% select(-starts_with("m_")))
 ```
 
@@ -190,14 +198,11 @@ rf_puri.imp_25 <- importance(rf_puri_25)
 </div>
 
 ##Importance Cont'd
-<img src="paper_files/figure-latex/importance-plot-1.pdf" alt="importance" style="height: 500px"/>
+<img src="images/importance-plot.png" alt="importance" style="height: 500px"/>
  
 <div class = "notes"
 different splitting methods can help us to identify those variables that are perhaps most important for detecting these rare events. For example, `jet_4_pt` appears to be the most important variable for both one-sided methods, but it is also the of the highest importance for Gini so this may not be a differentiationg variable. The variables that do seem to differentiate between the methods include `jet_3_pt`, `jet_4_eta`, `jet_2_phi`, and `lepton_phi`. What's interesting here is that the one-sided purity places high importance on `jet_4_eta`, `jet_2_phi`, and `lepton_phi`, while the one-sided extremes places high importance on `jet_3_pt`, even though they achieve similar levels of detection for our class of interest. This points to the possibility of potentially ensembling the ensemble methods, and stacking these two methods for a potential classification boost of the class of interest.
 </div>
-
-##Levels of unbalancedness
-<img src="paper_files/figure-latex/all-res-1.pdf" alt="unbalance" style="height: 500px"/>
 
 ##Implementation
   - Written in `R`

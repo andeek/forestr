@@ -21,3 +21,5 @@ data-raw/*.csv
 inst/doc
 
 vignettes/forestr_cache
+slides/index_cache
+

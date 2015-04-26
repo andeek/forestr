@@ -1,8 +1,0 @@
-scatter	ggpairs	higgs_25	list
-rf_25	%>%	~	forestr	higgs_25	list	select	starts_with
-rf_25_2	%>%	~	forestr	higgs_25	select	starts_with
-rf_25_3	%>%	predict	rf_extr_25	rf_gini_25	rf_info_25	select	starts_with	test_higgs_25
-rf_25_4	%>%	predict	rf_puri_25	select	starts_with	test_higgs_25
-rf_25_tables	%>%	$	c	data.frame	ifelse	kable	rbind	rf_extr_25	rf_gini_25	rf_info_25	rf_puri_25	rownames	rownames<-	sum
-rf_25_tables_test	!=	%>%	$	$<-	c	data.frame	ifelse	kable	nrow	rbind	rownames	rownames<-	sum	table	test_higgs_25
-importance	importance	rf_extr_25	rf_gini_25	rf_info_25	rf_puri_25
