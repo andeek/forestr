@@ -5,13 +5,13 @@ author: "Andee Kaplan"
 date: "April 27, 2015"
 output: 
   ioslides_presentation:
-    incremental: true
+    incremental: false
 bibliography: biblio.bib
 css: style.css
 ---
 
 ```{r hooks, echo = FALSE}
-knitr::opts_chunk$set(message = FALSE, warning = FALSE, cache = TRUE, autodep=TRUE, cache.lazy=FALSE )
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, cache = FALSE)
 ggplot2::theme_set(ggplot2::theme_bw(base_family="serif"))
 ```
 
@@ -42,16 +42,6 @@ One-sided extremes  | $\min\{\hat{\mu}_L, \hat{\mu}_R\}$           | $\max\{p_L^
 You may think to yourself, "Why would I need this? The `randomForest` package works well and is blazing fast!" I would agree. If Gini is your splitting criteria of choice and your data are fairly balanced, then I would recommend using `randomForest`. If, however, your data is not evenly spread across the classification buckets or there is a particular class of data that you care more about classifying correctly (especially if it is a small minority of cases), then you may turn to a one-sided extremes or one-sided purity splitting function. This is the case often with detection problems, for example cancer detection in patients or detection of the Higgs particle from measurements by particle detectors in an accelerator.
 </div>
 
-##Installation
-
-`forestr` and and accompanying dependency package `rpart` can be installed from GitHub in `R` with `devtools` [@devtools].
-
-```r
-library(devtools)
-install_github("andeek/rpart")
-install_github("andeek/forestr")
-```
-
 ##Higgs Example
 
   - Monte Carlo simulations to resemble properties measured by particle detectors in an accelerator to detect the Higgs particle [@baldi2014searching]
@@ -80,43 +70,62 @@ data(higgs_25)
 data(test_higgs_25)
 ```
 
-```{r scatter, echo=FALSE}
+```{r scatter, echo=FALSE, fig.width=9, fig.height=5, cache=TRUE}
+#axis label manipulation from: 
+#http://stackoverflow.com/questions/28427572/manipulating-axis-titles-in-ggpairs-ggally
+
 #paired scatterplot
 ggpairs(higgs_25, columns = 2:22, color = "class",
-        columnLabels = 1:21, axisLabels = "none",
-        alpha = .5, 
-        upper = list(continuous = 'blank')) 
+                  axisLabels = "none",
+                  columnLabels = 1:21,
+                  alpha = .5, 
+                  upper = list(continuous = 'blank')) 
 ```
+
+<div class="notes">
+class 0 is red and class 1 is blue
+</div>
+
+##Features (Cont'd)
+```{r scatter2, echo=FALSE, fig.width=9, fig.height=5, cache=TRUE}
+#axis label manipulation from: 
+#http://stackoverflow.com/questions/28427572/manipulating-axis-titles-in-ggpairs-ggally
+
+#paired scatterplot
+ggpairs(higgs_25, columns = c(19, 15, 20, 13, 4), color = "class",
+                  alpha = .5)
+```
+
+<div class="notes">
+class 0 is red and class 1 is blue
+</div>
+
 
 ##Fitting {.smaller}
 
-```{r rf_25}
+```{r rf_25, eval=FALSE}
 #train forests
 rf_gini_25 <- forestr(class ~ ., data = higgs_25 %>% select(-starts_with("m_")))
 rf_info_25 <- forestr(class ~ ., data = higgs_25 %>% select(-starts_with("m_")), 
                       parms = list(split = "information"))
+### <b>
 rf_extr_25 <- forestr(class ~ ., data = higgs_25 %>% select(-starts_with("m_")), 
                   method = "extremes", parm = list(classOfInterest = "1"))
-```
-
-```{r puri_obj, echo=FALSE}
-load("cache/puri.rda")
-```
-
-```{r rf_25_2, eval=FALSE}
 rf_puri_25 <- forestr(class ~ ., data = higgs_25 %>% select(-starts_with("m_")), 
                       method = "purity")
-```
+### </b>
 
-```{r rf_25_3}
 #test four forests
 rf_gini.pred_25 <- predict(rf_gini_25, test_higgs_25 %>% select(-starts_with("m_")))
 rf_info.pred_25 <- predict(rf_info_25, test_higgs_25 %>% select(-starts_with("m_")))
 rf_extr.pred_25 <- predict(rf_extr_25, test_higgs_25 %>% select(-starts_with("m_")))
+rf_puri.pred_25 <- predict(rf_puri_25, test_higgs_25 %>% select(-starts_with("m_")))
 ```
 
-```{r rf_25_4, eval=FALSE}
-rf_puri.pred_25 <- predict(rf_puri_25, test_higgs_25 %>% select(-starts_with("m_")))
+```{r puri_obj, echo=FALSE}
+#save(rf_gini_25, rf_info_25, rf_extr_25, rf_puri_25, 
+#     rf_gini.pred_25, rf_info.pred_25, rf_extr.pred_25, rf_puri.pred_25, file = "cache/forests.rda")
+load("cache/forests.rda")
 ```
 
 <div class = "notes">
@@ -200,7 +209,7 @@ rf_puri.imp_25 <- importance(rf_puri_25)
 ##Importance Cont'd
 <img src="images/importance-plot.png" alt="importance" style="height: 500px"/>
  
-<div class = "notes"
+<div class = "notes">
 different splitting methods can help us to identify those variables that are perhaps most important for detecting these rare events. For example, `jet_4_pt` appears to be the most important variable for both one-sided methods, but it is also the of the highest importance for Gini so this may not be a differentiationg variable. The variables that do seem to differentiate between the methods include `jet_3_pt`, `jet_4_eta`, `jet_2_phi`, and `lepton_phi`. What's interesting here is that the one-sided purity places high importance on `jet_4_eta`, `jet_2_phi`, and `lepton_phi`, while the one-sided extremes places high importance on `jet_3_pt`, even though they achieve similar levels of detection for our class of interest. This points to the possibility of potentially ensembling the ensemble methods, and stacking these two methods for a potential classification boost of the class of interest.
 </div>
 
@@ -239,7 +248,25 @@ By using `rpart` to create the stubs in `forestr`, this allows `forestr` to be a
     - Communication with author of `itree` helped to find the issues
   - S3 classes are really neat and easy 
 </div>
-  
+
+#Thanks!
+
+Questions?
+
+ajkaplan@iastate.edu
+
+#Appendix
+
+##Installation
+
+`forestr` and and accompanying dependency package `rpart` can be installed from GitHub in `R` with `devtools` [@devtools].
+
+```r
+library(devtools)
+install_github("andeek/rpart")
+install_github("andeek/forestr")
+```
+
 ##References {#refs}
   
   
