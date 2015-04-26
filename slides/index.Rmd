@@ -92,8 +92,9 @@ class 0 is red and class 1 is blue
 #http://stackoverflow.com/questions/28427572/manipulating-axis-titles-in-ggpairs-ggally
 
 #paired scatterplot
-ggpairs(higgs_25, columns = c(19, 15, 20, 13, 4), color = "class",
+g <- ggpairs(higgs_25, columns = c(19, 15, 20, 13, 4), color = "class",
                   alpha = .5)
+print(g, bottom = .5)
 ```
 
 <div class="notes">
