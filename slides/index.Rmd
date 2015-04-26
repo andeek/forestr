@@ -83,7 +83,7 @@ ggpairs(higgs_25, columns = 2:22, color = "class",
 ```
 
 <div class="notes">
-class 0 is red and class 1 is blue
+move on quickly
 </div>
 
 ##Features (Cont'd)
@@ -98,7 +98,9 @@ print(g, bottom = .5)
 ```
 
 <div class="notes">
-class 0 is red and class 1 is blue
+class 0 is red and class 1 is blue. 
+1. No clear separation between classes -- random forest may not be successful
+2. there are some slight differences between classes for these variables, so maybe we can detect something
 </div>
 
 
@@ -130,7 +132,9 @@ load("cache/forests.rda")
 ```
 
 <div class = "notes">
-Having taken a look at the raw data, we will move forward with training four random forests to our dataset, one for each available splitting method. 
+1. training four random forests to our dataset, one for each available splitting method. 
+2. specify new splitting criteria through method = extremes or purity 
+3. pass through class of interest, in this case 1 for detecting a higgs particle
 </div>
 
 ##Results
@@ -221,11 +225,13 @@ different splitting methods can help us to identify those variables that are per
 <img src="images/forest_rpart.png" alt="implement" style="height: 400px"/>
 
 <div class = "notes">
-The `rpart` functionality is used to create stub trees (trees of maximum depth one) from a random selection of variables on the bootstrapped data at each eligible node. The dataset is used to create $B$ bootstrap sampled datasets which are then used to create $B$ trees. Each tree is created by recursively splitting each terminal node on a set of randomly sampled $m$ variables from the dataset until this process can continue no longer. `forestr` uses `rpart` to split each terminal node at most depth of one.
-
-The modifications to `rpart` for the additional splitting functions were first introduced in the package `itree` [@itree], however this package was build on an old and slightly unstable version of `rpart`, making it unusable as is within the `forestr` framework. Fortunately, `rpart` allows for the addition of user defined splitting criterion using either `C` functions or `R` functions written by the user.
-
-By using `rpart` to create the stubs in `forestr`, this allows `forestr` to be a truly flexible method for implementing the random forest methodology. If desired, a user can create her own splitting function by following the framework defined in `rpart` and extending the random forest methodology to adapt to a new splitting mechanism.
+1. forestr is a truly flexible random forest because of user specified splitting mechanisms in rpart
+2. steps of how it uses R part
+  - stubbing
+  - random select variables
+  - splitting data
+  - split left/right nodes via another stub
+3. itree unstable => take splitting functions and put them in rpart
 </div>
 
 ##Remarks
@@ -233,6 +239,10 @@ By using `rpart` to create the stubs in `forestr`, this allows `forestr` to be a
   -  Written completely in `R` $\Rightarrow$ slow 
     - Next step would be to rewrite the inner workhorse functions in `C++` to help with a speedup 
     - Alternative could be to alter the `randomForest` package to include alternative splitting mechanisms, but this package is written in `Fortran`, and so would need some updating first
+
+<div class="notes">
+don't read first bullet
+</div>
 
 ##Lessons learned
 
