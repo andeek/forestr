@@ -2,7 +2,7 @@
 title: "Choose your own splitting criteria" 
 subtitle: "An adventure with random forests"
 author: "Andee Kaplan"
-date: "April 27, 2015"
+date: "Follow along: http://bit.ly/forestr"
 output: 
   ioslides_presentation:
     incremental: false
