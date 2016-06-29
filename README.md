@@ -1,4 +1,5 @@
 # forestr
+[![Travis-CI Build Status](https://travis-ci.org/andeek/forestr.svg?branch=master)](https://travis-ci.org/andeek/forestr)
 
 Just as a forester uses many tools to manage a forest, we may need multiple tools to manage a random forest. `forestr` is an R package that extends the random forest methodology by including multiple splitting criteria for building the trees. Additionally, the possibility for user specified splitting criteria is left open by functionalizing the splitting methods.
 
