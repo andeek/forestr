@@ -6,3 +6,4 @@ cache: packages
 env:
   global:
     - R_CHECK_ARGS="--no-vignettes --no-manual"
+    - R_BUILD_ARGS="--no-vignettes"
