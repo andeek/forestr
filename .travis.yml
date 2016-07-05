@@ -5,4 +5,4 @@ sudo: false
 cache: packages
 env:
   global:
-    - R_CHECK_ARGS="--no-build-vignettes --no-manual"
+    - R_CHECK_ARGS="--no-vignettes --no-manual"
