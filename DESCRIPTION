@@ -1,5 +1,5 @@
 Package: forestr
-Title: Random forests with a user created splitting criteria
+Title: Random forests with a user created splitting criterion
 Version: 0.0.0.9000
 Authors@R: person("Andee", "Kaplan", , "ajkaplan@iastate.edu", role = c("aut", "cre"))
 Description: Classification and regression based on a forest of trees
